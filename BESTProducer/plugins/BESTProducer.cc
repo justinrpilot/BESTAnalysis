@@ -73,7 +73,7 @@ class BESTProducer : public edm::stream::EDProducer<> {
       virtual void endStream() override;
       float LegP(float x, int order);
       int FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
-      void pboost( TVector3 pbeam, TVector3 plab, TVector3 &pboo );	
+      void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );	
 
       TFile *outfile;
       TH2F *h_preBoostJet;
@@ -83,7 +83,6 @@ class BESTProducer : public edm::stream::EDProducer<> {
       TTree *jetTree;
 
 
-      TMVA::Reader *reader = new TMVA::Reader();
 
       std::map<std::string, float> treeVars;
       std::vector<std::string> listOfVars;
@@ -93,12 +92,14 @@ class BESTProducer : public edm::stream::EDProducer<> {
       int pdgIDSrc_;
         int NNtargetX_;
         int NNtargetY_;
+	int isMC_;
+
    
 	edm::EDGetTokenT<std::vector<pat::PackedCandidate> > pfCandsToken_;
 	edm::EDGetTokenT<std::vector<pat::Jet> > ak8JetsToken_;
 	edm::EDGetTokenT<std::vector<reco::GenParticle> > genPartToken_;
 
-
+	edm::EDGetTokenT<std::vector<pat::Jet> > ak8CHSSoftDropSubjetsToken_;
 
 
 
@@ -120,7 +121,8 @@ class BESTProducer : public edm::stream::EDProducer<> {
 BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    pdgIDSrc_  (iConfig.getParameter<int>("pdgIDforMatch")),
    NNtargetX_  (iConfig.getParameter<int>("NNtargetX")),
-   NNtargetY_  (iConfig.getParameter<int>("NNtargetY"))
+   NNtargetY_  (iConfig.getParameter<int>("NNtargetY")),
+   isMC_ (iConfig.getParameter<int>("isMC"))
 {
    //register your products
 /* Examples
@@ -151,6 +153,11 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
 
 
    listOfVars.push_back("et"); 
+   listOfVars.push_back("eta"); 
+   listOfVars.push_back("mass");
+   listOfVars.push_back("SDmass");
+   listOfVars.push_back("tau32");
+   listOfVars.push_back("tau21");
    listOfVars.push_back("h1_top"); 
    listOfVars.push_back("h2_top"); 
    listOfVars.push_back("h3_top"); 
@@ -188,16 +195,22 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("NNoutX");
    listOfVars.push_back("NNoutY");
    listOfVars.push_back("Njets_top");
+   listOfVars.push_back("Njets_W");
+   listOfVars.push_back("Njets_Z");
+   listOfVars.push_back("Njets_H");
    listOfVars.push_back("Njets_jet");
    listOfVars.push_back("Njets_orig");
-   listOfVars.push_back("transform_px");
-   listOfVars.push_back("transform_py");
-   listOfVars.push_back("transform_pz");
-   listOfVars.push_back("transform_eta");
-   listOfVars.push_back("transform_phi");
-   listOfVars.push_back("jet_eta");
-   listOfVars.push_back("jet_phi");
-   
+   listOfVars.push_back("bDisc"); 
+   listOfVars.push_back("sumPz_top");
+   listOfVars.push_back("sumPz_W");
+   listOfVars.push_back("sumPz_Z");
+   listOfVars.push_back("sumPz_H");
+   listOfVars.push_back("sumPz_jet");
+   listOfVars.push_back("sumP_top");
+   listOfVars.push_back("sumP_W");
+   listOfVars.push_back("sumP_Z");
+   listOfVars.push_back("sumP_H");
+   listOfVars.push_back("sumP_jet");
 
 
 for (unsigned i = 0; i < listOfVars.size(); i++){
@@ -209,36 +222,32 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
    }
 
    //For NN inputs
-   reader->AddVariable( "h1_top", &treeVars[ "h1_top" ] );
-   reader->AddVariable( "h2_top", &treeVars[ "h2_top" ] );
-   reader->AddVariable( "h3_top", &treeVars[ "h3_top" ] );
-   reader->AddVariable( "h4_top", &treeVars[ "h4_top" ] );	
-   reader->AddVariable( "h1_W", &treeVars[ "h1_W" ] );
-   reader->AddVariable( "h2_W", &treeVars[ "h2_W" ] );
-   reader->AddVariable( "h3_W", &treeVars[ "h3_W" ] );
-   reader->AddVariable( "h4_W", &treeVars[ "h4_W" ] );	
-   reader->AddVariable( "h1_Z", &treeVars[ "h1_Z" ] );
-   reader->AddVariable( "h2_Z", &treeVars[ "h2_Z" ] );
-   reader->AddVariable( "h3_Z", &treeVars[ "h3_Z" ] );
-   reader->AddVariable( "h4_Z", &treeVars[ "h4_Z" ] );	
-   reader->AddVariable( "h1_H", &treeVars[ "h1_H" ] );
-   reader->AddVariable( "h2_H", &treeVars[ "h2_H" ] );
-   reader->AddVariable( "h3_H", &treeVars[ "h3_H" ] );
-   reader->AddVariable( "h4_H", &treeVars[ "h4_H" ] );	
-   reader->AddSpectator( "targetX", &treeVars[ "targetX" ]);
-   reader->AddSpectator( "targetY", &treeVars[ "targetY" ]);
-
-   reader->BookMVA( "MLP method", "TMVARegression_MLP.weights.xml");
- 
 
 
-   edm::InputTag pfCandsTag_("packedPFCandidates", "", "PAT");
-   edm::InputTag ak8JetsTag_("slimmedJetsAK8", "", "PAT");
-   edm::InputTag genPartTag_("prunedGenParticles", "", "PAT");
+   edm::InputTag pfCandsTag_;
+   edm::InputTag ak8JetsTag_;
+   edm::InputTag genPartTag_;
+   edm::InputTag ak8subjetsTag_;
+
+
+   if (isMC_){
+   pfCandsTag_ = edm::InputTag("packedPFCandidates", "", "PAT");
+   ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
+   genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
+   ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "PAT");
+   }
+   else {
+   pfCandsTag_ = edm::InputTag("packedPFCandidates", "", "RECO");
+   ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "RECO");
+   genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
+   ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "RECO");
+   }
+   
+
    pfCandsToken_ = consumes<std::vector<pat::PackedCandidate> >(pfCandsTag_);
    ak8JetsToken_ = consumes<std::vector<pat::Jet> >(ak8JetsTag_);
    genPartToken_ = consumes<std::vector<reco::GenParticle> >(genPartTag_);
-
+   ak8CHSSoftDropSubjetsToken_ = consumes<std::vector<pat::Jet> >( ak8subjetsTag_ );
 
 }
 
@@ -286,7 +295,14 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    Handle< std::vector<reco::GenParticle> > genParticles;
    iEvent.getByToken(genPartToken_, genParticles);
 
+   Handle< std::vector<pat::Jet> > ak8Subjets;
+   iEvent.getByToken(ak8CHSSoftDropSubjetsToken_, ak8Subjets);
+
+
+
+
    std::vector<TLorentzVector> genTops;
+   if (isMC_){
 
    for (std::vector<reco::GenParticle>::const_iterator pBegin = genParticles->begin(), pEnd = genParticles->end(), ipart = pBegin; ipart != pEnd; ++ipart){
 
@@ -298,32 +314,63 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    }
 
-
+   }
 
    int nJets = 0;
+
 
    for (std::vector<pat::Jet>::const_iterator jetBegin = ak8Jets->begin(), jetEnd = ak8Jets->end(), ijet = jetBegin; ijet != jetEnd; ++ijet){
 
 	bool match = false;
+
+	if (isMC_){
 	for (size_t i = 0; i < genTops.size(); i++){
 
 		TLorentzVector thisjetLV(ijet->px(), ijet->py(), ijet->pz(), ijet->energy());
 		if (thisjetLV.DeltaR(genTops[i]) < 0.2) match = true;
+
 	}
 
+	}
 
 	nJets++;
-	if (!match) continue;
-	if (ijet->pt() < 400) continue;
+	if (isMC_) { if (!match) continue; }
+	if (ijet->pt() < 200) continue;
+
+
+	auto const & thisSubjets = ijet->subjets();
+
+	if (thisSubjets.size() < 2) continue;
+
+
+	float btagValue1 = thisSubjets.at(0)->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
+	float btagValue2 = thisSubjets.at(1)->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
+
+	
+	
+
+
+	float tau3 = ijet->userFloat("NjettinessAK8:tau3");
+	float tau2 = ijet->userFloat("NjettinessAK8:tau2");
+	float tau1 = ijet->userFloat("NjettinessAK8:tau1");
+	float tau32 = tau3/tau2;
+	float tau21 = tau2/tau1;
 
 
 	count++;
 
 
 	fourv thisJet = ijet->polarP4();
-	
 
-	treeVars["et"] = thisJet.Et();
+	treeVars["bDisc"] = max( btagValue1, btagValue2 );
+
+	treeVars["et"] = thisJet.Pt();
+	treeVars["eta"] = thisJet.Rapidity();
+	treeVars["mass"] = thisJet.M();
+	treeVars["SDmass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+
+	treeVars["tau32"] = tau32;
+	treeVars["tau21"] = tau21;
 
 	treeVars["targetX"] = NNtargetX_;
 	treeVars["targetY"] = NNtargetY_;
@@ -333,11 +380,13 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	TLorentzVector thisJetLV_Z(0.,0.,0.,0.);
 	TLorentzVector thisJetLV_H(0.,0.,0.,0.);
 	TLorentzVector thisJetLV_top(0.,0.,0.,0.);
-	thisJetLV.SetXYZM(thisJet.X(), thisJet.Y(), thisJet.Z(), thisJet.M() );
-	thisJetLV_W.SetXYZM(thisJet.X(), thisJet.Y(), thisJet.Z(), 80.4 );
-	thisJetLV_Z.SetXYZM(thisJet.X(), thisJet.Y(), thisJet.Z(), 91.2 );
-	thisJetLV_H.SetXYZM(thisJet.X(), thisJet.Y(), thisJet.Z(), 125. );
-	thisJetLV_top.SetXYZM(thisJet.X(), thisJet.Y(), thisJet.Z(), 172.5 );
+	thisJetLV.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), thisJet.M() );
+	thisJetLV_W.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 80.4 );
+	thisJetLV_Z.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 91.2 );
+	thisJetLV_H.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 125. );
+	thisJetLV_top.SetPtEtaPhiM(thisJet.Pt(), thisJet.Eta(), thisJet.Phi(), 172.5 );
+
+
 
 
 	
@@ -370,6 +419,9 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 	vector<fastjet::PseudoJet> topFJparticles;
+	vector<fastjet::PseudoJet> ZFJparticles;
+	vector<fastjet::PseudoJet> WFJparticles;
+	vector<fastjet::PseudoJet> HFJparticles;
 	vector<fastjet::PseudoJet> topFJparticles_noBoost;
 	
 	vector<fastjet::PseudoJet> jetFJparticles;
@@ -380,10 +432,10 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	
 	TVector3 transformedV;
 
-	
+
+	if (ijet->numberOfDaughters() < 2) continue;
 
 	for(unsigned int i = 0; i < ijet->numberOfDaughters(); i++){
-
 
 
 
@@ -398,15 +450,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 		h_preBoostJet->Fill(thisParticleLV_jet.Eta(), thisParticleLV_jet.Phi(), thisParticleLV_jet.E());
 
-		pboost( thisJetLV.Vect(), thisParticleLV_jet.Vect(), transformedV );
-
-		TLorentzVector thisParticleLV_transformed( transformedV.X(), transformedV.Y(), transformedV.Z(), thisParticleLV_jet.E() );
-		treeVars["transform_px"] = thisParticleLV_transformed.X();
-		treeVars["transform_py"] = thisParticleLV_transformed.Y();
-		treeVars["transform_pz"] = thisParticleLV_transformed.Z();
-		treeVars["transform_eta"] = thisParticleLV_transformed.Eta();
-		treeVars["transform_phi"] = thisParticleLV_transformed.Phi();
-		jetTree->Fill();
 
 
 
@@ -415,7 +458,13 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		
 		topFJparticles_noBoost.push_back( PseudoJet( thisParticleLV_top.X(), thisParticleLV_top.Y(), thisParticleLV_top.Z(), thisParticleLV_top.T() ) );
 		jetFJparticles_noBoost.push_back( PseudoJet( thisParticleLV_jet.X(), thisParticleLV_jet.Y(), thisParticleLV_jet.Z(), thisParticleLV_jet.T() ) );
+
+		//pboost( thisJetLV.Vect(), thisParticleLV_jet.Vect(), transformedV );
+
+		TLorentzVector thisParticleLV_transformed( transformedV.X(), transformedV.Y(), transformedV.Z(), thisParticleLV_jet.E() );
+
 		jetFJparticles_transformed.push_back( PseudoJet( thisParticleLV_transformed.X(), thisParticleLV_transformed.Y(), thisParticleLV_transformed.Z(), thisParticleLV_transformed.T() ) );	
+		
 
 
 		thisParticleLV_jet.Boost( -thisJetLV.BoostVector() );
@@ -423,6 +472,25 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		thisParticleLV_W.Boost( -thisJetLV_W.BoostVector() );
 		thisParticleLV_H.Boost( -thisJetLV_H.BoostVector() );
 		thisParticleLV_top.Boost( -thisJetLV_top.BoostVector() );
+
+
+
+
+
+
+		pboost( thisJetLV_W.Vect(), thisParticleLV_W.Vect(), thisParticleLV_W);
+		pboost( thisJetLV_Z.Vect(), thisParticleLV_Z.Vect(), thisParticleLV_Z);
+		pboost( thisJetLV_top.Vect(), thisParticleLV_top.Vect(), thisParticleLV_top);
+		pboost( thisJetLV_H.Vect(), thisParticleLV_H.Vect(), thisParticleLV_H);
+
+
+
+
+
+
+
+
+
 
 		
 		particles_jet.push_back( thisParticleLV_jet );
@@ -433,6 +501,9 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 		topFJparticles.push_back( PseudoJet( thisParticleLV_top.X(), thisParticleLV_top.Y(), thisParticleLV_top.Z(), thisParticleLV_top.T() ) );
+		WFJparticles.push_back( PseudoJet( thisParticleLV_W.X(), thisParticleLV_W.Y(), thisParticleLV_W.Z(), thisParticleLV_W.T() ) );
+		ZFJparticles.push_back( PseudoJet( thisParticleLV_Z.X(), thisParticleLV_Z.Y(), thisParticleLV_Z.Z(), thisParticleLV_Z.T() ) );
+		HFJparticles.push_back( PseudoJet( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z(), thisParticleLV_H.T() ) );
 		jetFJparticles.push_back( PseudoJet( thisParticleLV_jet.X(), thisParticleLV_jet.Y(), thisParticleLV_jet.Z(), thisParticleLV_jet.T() ) );
 
 
@@ -482,9 +553,12 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	double R = 0.4;
         JetDefinition jet_def(antikt_algorithm, R);
-        JetDefinition jet_def2(antikt_algorithm, 2*R);
+        JetDefinition jet_def2(antikt_algorithm, 0.8);
 
 	ClusterSequence cs(topFJparticles, jet_def);
+	ClusterSequence cs_W(WFJparticles, jet_def);
+	ClusterSequence cs_Z(ZFJparticles, jet_def);
+	ClusterSequence cs_H(HFJparticles, jet_def);
 	ClusterSequence cs_jet(jetFJparticles, jet_def);
 	ClusterSequence cs_noBoost(topFJparticles_noBoost, jet_def2);
        
@@ -492,32 +566,66 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
  
 	vector<PseudoJet> jetsFJ = cs.inclusive_jets(30.0);
+	vector<PseudoJet> jetsFJ_W = cs_W.inclusive_jets(30.0);
+	vector<PseudoJet> jetsFJ_Z = cs_Z.inclusive_jets(30.0);
+	vector<PseudoJet> jetsFJ_H = cs_H.inclusive_jets(30.0);
 	vector<PseudoJet> jetsFJ_jet = cs_jet.inclusive_jets(30.0);
 	vector<PseudoJet> jetsFJ_noBoost = cs_noBoost.inclusive_jets(30.0);
 
-	vector<PseudoJet> jetsFJ_transformed = cs_transformed.inclusive_jets(30.0);
-	cout << "FOUND TRANSFORMED JETS  " << jetsFJ_transformed.size() << endl;
+	vector<PseudoJet> jetsFJ_transformed = cs_transformed.inclusive_jets(10.0);
 
-	if (jetsFJ_transformed.size() == 2){
 
-		cout << jetsFJ_transformed[0].eta() << "  " << jetsFJ_transformed[0].phi() << endl;
-		cout << jetsFJ_transformed[1].eta() << "  " << jetsFJ_transformed[1].phi() << endl;
-		treeVars["jet_eta"] = jetsFJ_transformed[0].eta(); 
-		treeVars["jet_phi"] = jetsFJ_transformed[0].phi();
-		jetTree->Fill();
-		treeVars["jet_eta"] = jetsFJ_transformed[1].eta();
-		treeVars["jet_phi"] = jetsFJ_transformed[1].phi();
-		jetTree->Fill();
+	//sum of jet pz and p  Indices = top, W, Z, H, j
+	float sumP[5] = {0.0};
+	float sumPz[5] = {0.0};
+
+	
+	size_t maxJets = 4;
+
+
+	for (size_t i=0; i < TMath::Min(maxJets, jetsFJ.size()); i++){
+		sumPz[0] += jetsFJ[i].pz();
+		sumP[0] += sqrt( jetsFJ[i].modp2() );
+	}
+	for (size_t i=0; i < TMath::Min(maxJets, jetsFJ_W.size()); i++){
+		sumPz[1] += jetsFJ_W[i].pz();
+		sumP[1] += sqrt( jetsFJ_W[i].modp2() );
+	}
+	for (size_t i=0; i < TMath::Min(maxJets, jetsFJ_Z.size()); i++){
+		sumPz[2] += jetsFJ_Z[i].pz();
+		sumP[2] += sqrt( jetsFJ_Z[i].modp2() );
+	}
+	for (size_t i=0; i < TMath::Min(maxJets, jetsFJ_H.size()); i++){
+		sumPz[3] += jetsFJ_H[i].pz();
+		sumP[3] += sqrt( jetsFJ_H[i].modp2() );
+	}
+	for (size_t i=0; i < TMath::Min(maxJets, jetsFJ_jet.size()); i++){
+		sumPz[4] += jetsFJ_jet[i].pz();
+		sumP[4] += sqrt( jetsFJ_jet[i].modp2() );
 	}
 
-	for (size_t i = 0; i < jetsFJ_noBoost.size(); i++){
+	
 
-		cout << jetsFJ_noBoost[i].eta() << " " << jetsFJ_noBoost[i].phi() << endl;
 
-	}
+
+	treeVars["sumPz_top"] = sumPz[0];
+	treeVars["sumPz_W"] = sumPz[1];
+	treeVars["sumPz_Z"] = sumPz[2];
+	treeVars["sumPz_H"] = sumPz[3];
+	treeVars["sumPz_jet"] = sumPz[4];
+	treeVars["sumP_top"] = sumP[0];
+	treeVars["sumP_W"] = sumP[1];
+	treeVars["sumP_Z"] = sumP[2];
+	treeVars["sumP_H"] = sumP[3];
+	treeVars["sumP_jet"] = sumP[4];
+
+
 
 
 	treeVars["Njets_top"] = jetsFJ.size();
+	treeVars["Njets_W"] = jetsFJ_W.size();
+	treeVars["Njets_Z"] = jetsFJ_Z.size();
+	treeVars["Njets_H"] = jetsFJ_H.size();
 	treeVars["Njets_jet"] = jetsFJ_jet.size();
 	treeVars["Njets_orig"] = jetsFJ_noBoost.size();
 
@@ -561,8 +669,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	treeVars["thrust_H"] = thrustCalculator_H.thrust();
 
 
-	treeVars["NNoutX"] = (reader->EvaluateRegression( "MLP method" ))[0];
-	treeVars["NNoutY"] = (reader->EvaluateRegression( "MLP method" ))[1];
 
 
 
@@ -572,6 +678,9 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 	jetTree->Fill();
+
+	
+
 
     }//End jet loop
 
@@ -652,11 +761,11 @@ int BESTProducer::FWMoments( std::vector<TLorentzVector> particles, double (&out
 
 
 
-			H0 += w1 * w2 * fw0 / (s*s);
-			H1 += w1 * w2 * fw1 / (s*s);
-			H2 += w1 * w2 * fw2 / (s*s);
-			H3 += w1 * w2 * fw3 / (s*s);
-			H4 += w1 * w2 * fw4 / (s*s);
+			H0 += w1 * w2 * fw0;
+			H1 += w1 * w2 * fw1;
+			H2 += w1 * w2 * fw2;
+			H3 += w1 * w2 * fw3;
+			H4 += w1 * w2 * fw4;
 
 
 		}
@@ -674,7 +783,7 @@ int BESTProducer::FWMoments( std::vector<TLorentzVector> particles, double (&out
 }
 
 
-void BESTProducer::pboost( TVector3 pbeam, TVector3 plab, TVector3 &pboo ){
+void BESTProducer::pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo ){
 
  //given jet constituent momentum plab, find momentum relative to
  // beam direction pbeam

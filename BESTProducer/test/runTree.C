@@ -25,7 +25,8 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
 	
 	std::vector<std::string> listOfVars;
       std::map<std::string, float> treeVars;
-listOfVars.push_back("et"); 
+   listOfVars.push_back("et"); 
+   listOfVars.push_back("eta"); 
    listOfVars.push_back("mass");
    listOfVars.push_back("SDmass");
    listOfVars.push_back("tau32");
@@ -72,6 +73,14 @@ listOfVars.push_back("et");
    listOfVars.push_back("Njets_H");
    listOfVars.push_back("Njets_jet");
    listOfVars.push_back("Njets_orig");
+   listOfVars.push_back("sumPz_top");
+   listOfVars.push_back("sumPz_W");
+   listOfVars.push_back("sumPz_Z");
+   listOfVars.push_back("sumPz_H");
+   listOfVars.push_back("sumP_top");
+   listOfVars.push_back("sumP_W");
+   listOfVars.push_back("sumP_Z");
+   listOfVars.push_back("sumP_H");
    listOfVars.push_back("targetX");
    listOfVars.push_back("targetY");
  
@@ -84,7 +93,10 @@ listOfVars.push_back("et");
    
 
    treeVars["flatten"] = -999.999;
-
+   treeVars["PzOverP_top"] = -999.999;
+   treeVars["PzOverP_W"] = -999.999;
+   treeVars["PzOverP_Z"] = -999.999;
+   treeVars["PzOverP_H"] = -999.999;
 
 
    TFile *newFile = new TFile(outFile.c_str(), "RECREATE");
@@ -95,6 +107,12 @@ listOfVars.push_back("et");
    newTree->Branch("target4", &(treeVars["target4"]), "target4/F");
    newTree->Branch("NNout3", &(treeVars["NNout3"]), "NNout3/F");
    newTree->Branch("NNout4", &(treeVars["NNout4"]), "NNout4/F");
+
+   newTree->Branch("PzOverP_top", &(treeVars["PzOverP_top"]), "PzOverP_top/F");
+   newTree->Branch("PzOverP_W", &(treeVars["PzOverP_W"]), "PzOverP_W/F");
+   newTree->Branch("PzOverP_Z", &(treeVars["PzOverP_Z"]), "PzOverP_Z/F");
+   newTree->Branch("PzOverP_H", &(treeVars["PzOverP_H"]), "PzOverP_H/F");
+
 
    TMVA::Reader *reader = new TMVA::Reader();
    //For NN inputs
@@ -115,7 +133,8 @@ listOfVars.push_back("et");
    reader->AddVariable( "h3_H", &treeVars[ "h3_H" ] );
    reader->AddVariable( "h4_H", &treeVars[ "h4_H" ] );	
    reader->AddVariable( "et", &treeVars["et"]);
-   /*reader->AddVariable( "isotropy_H", &treeVars[ "isotropy_H" ] );	
+   reader->AddVariable( "eta", &treeVars["eta"]);
+   reader->AddVariable( "isotropy_H", &treeVars[ "isotropy_H" ] );	
    reader->AddVariable( "aplanarity_H", &treeVars[ "aplanarity_H" ] );	
    reader->AddVariable( "sphericity_H", &treeVars[ "sphericity_H" ] );	
    reader->AddVariable( "thrust_H", &treeVars[ "thrust_H" ] );	
@@ -131,15 +150,10 @@ listOfVars.push_back("et");
    reader->AddVariable( "aplanarity_Z", &treeVars[ "aplanarity_Z" ] );	
    reader->AddVariable( "sphericity_Z", &treeVars[ "sphericity_Z" ] );	
    reader->AddVariable( "thrust_Z", &treeVars[ "thrust_Z" ] );	
-   reader->AddVariable( "Njets_top", &treeVars[ "Njets_top" ] );	
-   reader->AddVariable( "Njets_W", &treeVars[ "Njets_W" ] );	
-   reader->AddVariable( "Njets_Z", &treeVars[ "Njets_Z" ] );	
-   reader->AddVariable( "Njets_H", &treeVars[ "Njets_H" ] );	
-   reader->AddVariable( "Njets_jet", &treeVars[ "Njets_jet" ] );	
-   reader->AddVariable( "SDmass", &treeVars["SDmass"]);
-   */reader->AddSpectator( "targetX", &treeVars[ "targetX" ]);
-   reader->AddSpectator( "targetY", &treeVars[ "targetY" ]);
-
+   reader->AddVariable( "sumPz_top/sumP_top", &treeVars["PzOverP_top"] );
+   reader->AddVariable( "sumPz_W/sumP_W", &treeVars["PzOverP_W"] );
+   reader->AddVariable( "sumPz_Z/sumP_Z", &treeVars["PzOverP_Z"] );
+   reader->AddVariable( "sumPz_H/sumP_H", &treeVars["PzOverP_H"] );
 
    reader->BookMVA( "MLP method", "TMVARegression_MLP.weights.xml");
 
@@ -147,7 +161,7 @@ listOfVars.push_back("et");
    TH1F *weightH = (TH1F *) weightFile->Get("weightH");
 
 
-   int nEvents = origFiles->GetEntries("et > 600.0 && et < 3000.0");
+   int nEvents = origFiles->GetEntries("et > 500.0 && et < 3000.0");
    float desiredEvents = 20000.0;
    TRandom* random1 = new TRandom;
 for (int i = 0; i < origFiles->GetEntries(); i++){
@@ -170,6 +184,13 @@ for (int i = 0; i < origFiles->GetEntries(); i++){
 	treeVars["targetY"] = targY;
 	treeVars["target3"] = targ3;
 	treeVars["target4"] = targ4;
+
+
+	treeVars["PzOverP_top"] = treeVars["sumPz_top"] / (treeVars["sumP_top"] + 0.00001);
+	treeVars["PzOverP_W"] = treeVars["sumPz_W"] / (treeVars["sumP_W"] + 0.00001);
+	treeVars["PzOverP_Z"] = treeVars["sumPz_Z"] / (treeVars["sumP_Z"] + 0.00001);
+	treeVars["PzOverP_H"] = treeVars["sumPz_H"] / (treeVars["sumP_H"] + 0.00001);
+
 
 
 	if (doWeight)	treeVars["flatten"] = weightH->GetBinContent(weightH->FindBin( treeVars["et"] ));

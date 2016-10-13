@@ -36,7 +36,6 @@
 #include "TSystem.h"
 #include "TROOT.h"
 
-//#include "TMVARegGui.C"
 
 #if not defined(__CINT__) || defined(__MAKECINT__)
 #include "TMVA/Tools.h"
@@ -154,6 +153,8 @@ void TMVARegression( TString myMethodList = "" )
    factory->AddVariable( "h2_H", "h2_H", "", 'F' );
    factory->AddVariable( "h3_H", "h3_H", "", 'F' );
    factory->AddVariable( "h4_H", "h4_H", "", 'F' );
+   factory->AddVariable( "et", "et", "", 'F');
+   factory->AddVariable( "eta", "eta", "", 'F');
    factory->AddVariable( "isotropy_H", "isotropy_H", "", 'F' );
    factory->AddVariable( "aplanarity_H", "aplanarity_H", "", 'F' );
    factory->AddVariable( "sphericity_H", "sphericity_H", "", 'F' );
@@ -170,16 +171,24 @@ void TMVARegression( TString myMethodList = "" )
    factory->AddVariable( "aplanarity_Z", "aplanarity_Z", "", 'F' );
    factory->AddVariable( "sphericity_Z", "sphericity_Z", "", 'F' );
    factory->AddVariable( "thrust_Z", "thrust_Z", "", 'F' );
+   factory->AddVariable( "sumPz_top / sumP_top", "", 'F');
+   factory->AddVariable( "sumPz_W / sumP_W", "", 'F');
+   factory->AddVariable( "sumPz_Z / sumP_Z", "", 'F');
+   factory->AddVariable( "sumPz_H / sumP_H", "", 'F');
+
+
 
    // You can add so-called "Spectator variables", which are not used in the MVA training, 
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the 
    // input variables, the response values of all trained MVAs, and the spectator variables
-   factory->AddSpectator( "targetX",  "targetX", "", 'F' );
-   factory->AddSpectator( "targetY",  "targetY", "", 'F' );
+   //factory->AddSpectator( "targetX",  "targetX", "", 'F' );
+   //factory->AddSpectator( "targetY",  "targetY", "", 'F' );
 
    // Add the variable carrying the regression target
    factory->AddTarget( "targetX" ); 
    factory->AddTarget( "targetY" ); 
+   factory->AddTarget( "target3" ); 
+   factory->AddTarget( "target4" ); 
 
    // It is also possible to declare additional targets for multi-dimensional regression, ie:
    // -- factory->AddTarget( "fvalue2" );
@@ -187,22 +196,30 @@ void TMVARegression( TString myMethodList = "" )
 
    // Read training and test data (see TMVAClassification for reading ASCII files)
    // load the signal and background event samples from ROOT trees
-   TFile *input(0);
-   TString fname = "histo_ALL.root";
-   if (!gSystem->AccessPathName( fname )) 
-      input = TFile::Open( fname ); // check if file in local directory exists
-   else 
-      input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" ); // if not: download from ROOT server
+   //TFile *input(0);
+   //TString fname = "histo_ALL.root";
+   //if (!gSystem->AccessPathName( fname )) 
+   //   input = TFile::Open( fname ); // check if file in local directory exists
+   //else 
+   //   input = TFile::Open( "http://root.cern.ch/files/tmva_reg_example.root" ); // if not: download from ROOT server
    
-   if (!input) {
-      std::cout << "ERROR: could not open data file" << std::endl;
-      exit(1);
-   }
-   std::cout << "--- TMVARegression           : Using input file: " << input->GetName() << std::endl;
+   //if (!input) {
+   //   std::cout << "ERROR: could not open data file" << std::endl;
+   //   exit(1);
+  // }
+   //std::cout << "--- TMVARegression           : Using input file: " << input->GetName() << std::endl;
+
+   TChain *input = new TChain("jetTree");
+   input->AddFile("../test/out_QCDall.root");
+   input->AddFile("../test/out_TTall.root");
+   input->AddFile("../test/out_WWall.root");
+   input->AddFile("../test/out_ZZall.root");
+   input->AddFile("../test/out_HHall.root");
+
 
    // --- Register the regression tree
 
-   TTree *regTree = (TTree*)input->Get("run/jetTree");
+   TTree *regTree = input;//(TTree*)input->Get("run/jetTree");
 
    // global event weights per tree (see below for setting event-wise weights)
    Double_t regWeight  = 1.0;   
@@ -212,14 +229,14 @@ void TMVARegression( TString myMethodList = "" )
 
    // This would set individual event weights (the variables defined in the 
    // expression need to exist in the original TTree)
-   //factory->SetWeightExpression( "var1", "Regression" );
+   factory->SetWeightExpression( "flatten", "Regression" );
 
    // Apply additional cuts on the signal and background samples (can be different)
-   TCut mycut = ""; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
+   TCut mycut = "et > 500 && et < 3000"; // for example: TCut mycut = "abs(var1)<0.5 && abs(var2-0.5)<1";
 
    // tell the factory to use all remaining events in the trees after training for testing:
    factory->PrepareTrainingAndTestTree( mycut, 
-                                        "nTrain_Regression=5000:nTest_Regression=5000:SplitMode=Random:NormMode=NumEvents:!V" );
+                                        "nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // If no numbers of events are given, half of the events in the tree are used 
    // for training, and the other half for testing:
@@ -310,5 +327,15 @@ void TMVARegression( TString myMethodList = "" )
 
    delete factory;
 
-   // Launch the GUI for the root macros
+
+
+
+
+
+
+
+
+
+
+
 }
