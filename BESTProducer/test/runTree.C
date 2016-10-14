@@ -161,7 +161,7 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    TH1F *weightH = (TH1F *) weightFile->Get("weightH");
 
 
-   int nEvents = origFiles->GetEntries("et > 500.0 && et < 3000.0");
+   int nEvents = origFiles->GetEntries("et > 500.0 && et < 3000.0 && SDmass > 50.0");
    float desiredEvents = 20000.0;
    TRandom* random1 = new TRandom;
 for (int i = 0; i < origFiles->GetEntries(); i++){
@@ -172,7 +172,7 @@ for (int i = 0; i < origFiles->GetEntries(); i++){
 		if  (i % 100000 == 0) cout << 100*(float(i) / float(nEntries)) << " Percent Complete." << endl;
 
 
-	if (treeVars["et"] < 600.0 || treeVars["et"] > 3000.0) continue;	
+	if (treeVars["et"] < 600.0 || treeVars["et"] > 3000.0 || treeVars["SDmass"] < 50.0) continue;	
 	if (reduce && rand > (desiredEvents / float(nEvents))) continue;
 
 	treeVars["NNoutX"] = (reader->EvaluateRegression( "MLP method" ))[0];

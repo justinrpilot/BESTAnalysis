@@ -9,21 +9,20 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-	
-	'root://cms-xrd-global.cern.ch//store/mc/RunIISpring16MiniAODv2/RadionTohhTohbbhbb_narrow_M-3000_13TeV-madgraph/MINIAODSIM/PUSpring16RAWAODSIM_80X_mcRun2_asymptotic_2016_miniAODv2_v0-v1/40000/4CEE2973-A12B-E611-8EC9-0025905B85B6.root'
 
+'root://cms-xrd-global.cern.ch//store/mc/RunIISpring16MiniAODv2/RadionToZZ_narrow_M-3000_13TeV-madgraph/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/10000/BAD2D204-BA3A-E611-B09A-0026B951BAB0.root'
 	)
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.run = cms.EDProducer('BESTProducer',
-	pdgIDforMatch = cms.int32(25),
-	NNtargetX = cms.int32(1),
+	pdgIDforMatch = cms.int32(23),
+	NNtargetX = cms.int32(-1),
 	NNtargetY = cms.int32(-1),
 	isMC = cms.int32(1)
 )
 
-process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_HH.root") )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_ZZ.root") )
 
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string("ana_out.root"),
