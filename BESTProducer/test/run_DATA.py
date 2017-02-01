@@ -11,7 +11,7 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
 
 
-	'root://cmsxrootd-site.fnal.gov//store/data/Run2016B/JetHT/MINIAOD/01Jul2016-v1/00000/085E58F6-A544-E611-BB10-00A0D1EC7FB8.root'
+	'root://cms-xrd-global.cern.ch//store/data/Run2016B/JetHT/MINIAOD/01Jul2016-v1/00000/085E58F6-A544-E611-BB10-00A0D1EC7FB8.root'
 
 	)
 )

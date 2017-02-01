@@ -279,6 +279,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
+
    std::auto_ptr< std::vector<double > > fw_moments_0( new std::vector<double>() );
    std::auto_ptr< std::vector<double > > fw_moments_1( new std::vector<double>() );
    std::auto_ptr< std::vector<double > > fw_moments_2( new std::vector<double>() );

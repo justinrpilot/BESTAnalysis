@@ -83,6 +83,9 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    listOfVars.push_back("sumP_H");
    listOfVars.push_back("targetX");
    listOfVars.push_back("targetY");
+   listOfVars.push_back("tau32");
+   listOfVars.push_back("tau21");
+
  
    for (unsigned i = 0; i < listOfVars.size(); i++){
 
@@ -97,7 +100,7 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    treeVars["PzOverP_W"] = -999.999;
    treeVars["PzOverP_Z"] = -999.999;
    treeVars["PzOverP_H"] = -999.999;
-
+   treeVars["sorting"] = -999.999;
 
    TFile *newFile = new TFile(outFile.c_str(), "RECREATE");
 	TTree *newTree = origFiles->CloneTree(0); 
@@ -112,6 +115,9 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    newTree->Branch("PzOverP_W", &(treeVars["PzOverP_W"]), "PzOverP_W/F");
    newTree->Branch("PzOverP_Z", &(treeVars["PzOverP_Z"]), "PzOverP_Z/F");
    newTree->Branch("PzOverP_H", &(treeVars["PzOverP_H"]), "PzOverP_H/F");
+
+   newTree->Branch("sorting", &(treeVars["sorting"]), "sorting/F");
+
 
 
    TMVA::Reader *reader = new TMVA::Reader();
@@ -154,15 +160,22 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    reader->AddVariable( "sumPz_W/sumP_W", &treeVars["PzOverP_W"] );
    reader->AddVariable( "sumPz_Z/sumP_Z", &treeVars["PzOverP_Z"] );
    reader->AddVariable( "sumPz_H/sumP_H", &treeVars["PzOverP_H"] );
+   reader->AddVariable( "tau32", &treeVars["tau32"] );
+   reader->AddVariable( "tau21", &treeVars["tau21"] );
+   reader->AddVariable( "SDmass", &treeVars["SDmass"]);
 
-   reader->BookMVA( "MLP method", "TMVARegression_MLP.weights.xml");
+   //reader->BookMVA( "MLP method", "TMVARegression_MLP.weights.xml");
+   reader->BookMVA("top", "weights/TMVAClassification_MLPBFGS.weights.xml");
+   reader->BookMVA("W", "weights/TMVAClassification_W_MLPBFGS.weights.xml");
+   reader->BookMVA("Z", "weights/TMVAClassification_Z_MLPBFGS.weights.xml");
+   reader->BookMVA("H", "weights/TMVAClassification_H_MLPBFGS.weights.xml");
 
    TFile *weightFile = new TFile(histName.c_str(), "READ");
    TH1F *weightH = (TH1F *) weightFile->Get("weightH");
 
 
-   int nEvents = origFiles->GetEntries("et > 500.0 && et < 3000.0 && SDmass > 50.0");
-   float desiredEvents = 20000.0;
+   int nEvents = origFiles->GetEntries("et > 500.0 && et < 3000.0 && SDmass > 20.0");
+   float desiredEvents = 100000.0;
    TRandom* random1 = new TRandom;
 for (int i = 0; i < origFiles->GetEntries(); i++){
 	
@@ -175,10 +188,17 @@ for (int i = 0; i < origFiles->GetEntries(); i++){
 	if (treeVars["et"] < 600.0 || treeVars["et"] > 3000.0 || treeVars["SDmass"] < 50.0) continue;	
 	if (reduce && rand > (desiredEvents / float(nEvents))) continue;
 
-	treeVars["NNoutX"] = (reader->EvaluateRegression( "MLP method" ))[0];
-	treeVars["NNoutY"] = (reader->EvaluateRegression( "MLP method" ))[1];
-	treeVars["NNout3"] = (reader->EvaluateRegression( "MLP method" ))[2];
-	treeVars["NNout4"] = (reader->EvaluateRegression( "MLP method" ))[3];
+
+	float NNout1 = (reader->EvaluateRegression( "top" ))[0];
+	float NNout2 = (reader->EvaluateRegression( "W" ))[0];
+	float NNout3 = (reader->EvaluateRegression( "Z" ))[0];
+	float NNout4 = (reader->EvaluateRegression( "H" ))[0];
+
+
+	treeVars["NNoutX"] = NNout1;
+	treeVars["NNoutY"] = NNout2;
+	treeVars["NNout3"] = NNout3;
+	treeVars["NNout4"] = NNout4;
 
 	treeVars["targetX"] = targX;
 	treeVars["targetY"] = targY;
@@ -190,6 +210,27 @@ for (int i = 0; i < origFiles->GetEntries(); i++){
 	treeVars["PzOverP_W"] = treeVars["sumPz_W"] / (treeVars["sumP_W"] + 0.00001);
 	treeVars["PzOverP_Z"] = treeVars["sumPz_Z"] / (treeVars["sumP_Z"] + 0.00001);
 	treeVars["PzOverP_H"] = treeVars["sumPz_H"] / (treeVars["sumP_H"] + 0.00001);
+
+
+
+	float distTo1 = sqrt( (NNout1 - 1.0)*(NNout1 - 1.0) + (NNout2 - 0.0) * (NNout2 - 0.0) + (NNout3 - 0.0) * (NNout3 - 0.0) + (NNout4 - 0.0) * (NNout4 - 0.0) ) ;
+	float distTo2 = sqrt( (NNout1 - 0.0)*(NNout1 - 0.0) + (NNout2 - 1.0) * (NNout2 - 1.0) + (NNout3 - 0.0) * (NNout3 - 0.0) + (NNout4 - 0.0) * (NNout4 - 0.0) ) ;
+	float distTo3 = sqrt( (NNout1 - 0.0)*(NNout1 - 0.0) + (NNout2 - 0.0) * (NNout2 - 0.0) + (NNout3 - 1.0) * (NNout3 - 1.0) + (NNout4 - 0.0) * (NNout4 - 0.0) ) ;
+	float distTo4 = sqrt( (NNout1 - 0.0)*(NNout1 - 0.0) + (NNout2 - 0.0) * (NNout2 - 0.0) + (NNout3 - 0.0) * (NNout3 - 0.0) + (NNout4 - 1.0) * (NNout4 - 1.0) ) ;
+
+
+	treeVars["targetX"] = distTo1;
+	treeVars["targetY"] = distTo2;
+	treeVars["target3"] = distTo3;
+	treeVars["target4"] = distTo4;
+
+	if (treeVars["NNoutX"] < 0.5) {
+		if (treeVars["NNoutY"] > 0.5) treeVars["sorting"] = 1.0;
+		else if (treeVars["NNout3"] > 0.5) treeVars["sorting"] = 2.0;
+		else if (treeVars["NNout4"] > 0.5) treeVars["sorting"] = 3.0;
+		else treeVars["sorting"] = 0.0;
+	}
+	else treeVars["sorting"] = 4.0;
 
 
 

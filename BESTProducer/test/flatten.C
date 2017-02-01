@@ -9,11 +9,11 @@ void flatten(TString infile, TString outWeightFile, float etMin = 1000, float et
 
 
 
-	TH1F *origH = new TH1F("origH", "origH", 50, etMin, etMax);
+	TH1F *origH = new TH1F("origH", "origH", 100, etMin, etMax);
 	inTree->Draw("et>>origH", Form("et > %f && et < %f", etMin, etMax));
 
 
-	TH1F *flatH = new TH1F("flatH", "flatH", 50, etMin, etMax);
+	TH1F *flatH = new TH1F("flatH", "flatH", 100, etMin, etMax);
 
 	for (int i = 0; i < origH->GetNbinsX(); i++)  flatH->AddBinContent(i, 1);
 	cout << origH->Integral() << endl;

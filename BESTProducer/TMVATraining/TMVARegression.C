@@ -175,8 +175,9 @@ void TMVARegression( TString myMethodList = "" )
    factory->AddVariable( "sumPz_W / sumP_W", "", 'F');
    factory->AddVariable( "sumPz_Z / sumP_Z", "", 'F');
    factory->AddVariable( "sumPz_H / sumP_H", "", 'F');
-
-
+   factory->AddVariable( "tau32", "", 'F');
+   factory->AddVariable( "tau21", "", 'F');
+   factory->AddVariable( "SDmass", "", 'F');
 
    // You can add so-called "Spectator variables", which are not used in the MVA training, 
    // but will appear in the final "TestTree" produced by TMVA. This TestTree will contain the 
@@ -185,10 +186,12 @@ void TMVARegression( TString myMethodList = "" )
    //factory->AddSpectator( "targetY",  "targetY", "", 'F' );
 
    // Add the variable carrying the regression target
-   factory->AddTarget( "targetX" ); 
-   factory->AddTarget( "targetY" ); 
-   factory->AddTarget( "target3" ); 
-   factory->AddTarget( "target4" ); 
+   //factory->AddTarget( "targetX" ); 
+   //factory->AddTarget( "targetY" ); 
+   //factory->AddTarget( "target3" ); 
+   //factory->AddTarget( "target4" ); 
+   factory->AddTarget( "targetX" );
+
 
    // It is also possible to declare additional targets for multi-dimensional regression, ie:
    // -- factory->AddTarget( "fvalue2" );
@@ -290,7 +293,7 @@ void TMVARegression( TString myMethodList = "" )
 
    // Neural network (MLP)
    if (Use["MLP"])
-      factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15:!UseRegulator" );
+      factory->BookMethod( TMVA::Types::kMLP, "MLP", "!H:!V:VarTransform=Norm:NeuronType=sigmoid:NCycles=20000:HiddenLayers=20,20:TestRate=6:TrainingMethod=BFGS:Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:ConvergenceTests=15:!UseRegulator" );
 
    // Support Vector Machine
    if (Use["SVM"])
