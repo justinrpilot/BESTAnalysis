@@ -85,7 +85,6 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    listOfVars.push_back("targetY");
    listOfVars.push_back("tau32");
    listOfVars.push_back("tau21");
-
  
    for (unsigned i = 0; i < listOfVars.size(); i++){
 
@@ -101,6 +100,12 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    treeVars["PzOverP_Z"] = -999.999;
    treeVars["PzOverP_H"] = -999.999;
    treeVars["sorting"] = -999.999;
+   treeVars["distTo0"] = -999.999;
+   treeVars["distTo1"] = -999.999;
+   treeVars["distTo2"] = -999.999;
+   treeVars["distTo3"] = -999.999;
+   treeVars["distTo4"] = -999.999;
+   treeVars["minDist"] = -999.999;
 
    TFile *newFile = new TFile(outFile.c_str(), "RECREATE");
 	TTree *newTree = origFiles->CloneTree(0); 
@@ -117,7 +122,12 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    newTree->Branch("PzOverP_H", &(treeVars["PzOverP_H"]), "PzOverP_H/F");
 
    newTree->Branch("sorting", &(treeVars["sorting"]), "sorting/F");
-
+   newTree->Branch("minDist", &(treeVars["minDist"]), "minDist/F");
+   newTree->Branch("distTo0", &(treeVars["distTo0"]), "distTo0/F");
+   newTree->Branch("distTo1", &(treeVars["distTo1"]), "distTo1/F");
+   newTree->Branch("distTo2", &(treeVars["distTo2"]), "distTo2/F");
+   newTree->Branch("distTo3", &(treeVars["distTo3"]), "distTo3/F");
+   newTree->Branch("distTo4", &(treeVars["distTo4"]), "distTo4/F");
 
 
    TMVA::Reader *reader = new TMVA::Reader();
@@ -164,7 +174,7 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    reader->AddVariable( "tau21", &treeVars["tau21"] );
    reader->AddVariable( "SDmass", &treeVars["SDmass"]);
 
-   //reader->BookMVA( "MLP method", "TMVARegression_MLP.weights.xml");
+   reader->BookMVA( "fourD", "weights/TMVARegression_MLP.weights.xml");
    reader->BookMVA("top", "weights/TMVAClassification_MLPBFGS.weights.xml");
    reader->BookMVA("W", "weights/TMVAClassification_W_MLPBFGS.weights.xml");
    reader->BookMVA("Z", "weights/TMVAClassification_Z_MLPBFGS.weights.xml");
@@ -194,6 +204,13 @@ for (int i = 0; i < origFiles->GetEntries(); i++){
 	float NNout3 = (reader->EvaluateRegression( "Z" ))[0];
 	float NNout4 = (reader->EvaluateRegression( "H" ))[0];
 
+	float NNout4d_1 = (reader->EvaluateRegression( "fourD"))[0];
+	float NNout4d_2 = (reader->EvaluateRegression( "fourD"))[1];
+	float NNout4d_3 = (reader->EvaluateRegression( "fourD"))[2];
+	float NNout4d_4 = (reader->EvaluateRegression( "fourD"))[3];
+
+	cout << NNout4d_1 << " " << NNout4d_2 << " " << NNout4d_3 << " " << NNout4d_4 << endl;
+
 
 	treeVars["NNoutX"] = NNout1;
 	treeVars["NNoutY"] = NNout2;
@@ -217,12 +234,13 @@ for (int i = 0; i < origFiles->GetEntries(); i++){
 	float distTo2 = sqrt( (NNout1 - 0.0)*(NNout1 - 0.0) + (NNout2 - 1.0) * (NNout2 - 1.0) + (NNout3 - 0.0) * (NNout3 - 0.0) + (NNout4 - 0.0) * (NNout4 - 0.0) ) ;
 	float distTo3 = sqrt( (NNout1 - 0.0)*(NNout1 - 0.0) + (NNout2 - 0.0) * (NNout2 - 0.0) + (NNout3 - 1.0) * (NNout3 - 1.0) + (NNout4 - 0.0) * (NNout4 - 0.0) ) ;
 	float distTo4 = sqrt( (NNout1 - 0.0)*(NNout1 - 0.0) + (NNout2 - 0.0) * (NNout2 - 0.0) + (NNout3 - 0.0) * (NNout3 - 0.0) + (NNout4 - 1.0) * (NNout4 - 1.0) ) ;
+	float distTo0 = sqrt( (NNout1 - 0.0)*(NNout1 - 0.0) + (NNout2 - 0.0) * (NNout2 - 0.0) + (NNout3 - 0.0) * (NNout3 - 0.0) + (NNout4 - 0.0) * (NNout4 - 0.0) ) ;
 
-
-	treeVars["targetX"] = distTo1;
-	treeVars["targetY"] = distTo2;
-	treeVars["target3"] = distTo3;
-	treeVars["target4"] = distTo4;
+	treeVars["distTo1"] = distTo1;
+	treeVars["distTo2"] = distTo2;
+	treeVars["distTo3"] = distTo3;
+	treeVars["distTo4"] = distTo4;
+	treeVars["distTo0"] = distTo4;
 
 	if (treeVars["NNoutX"] < 0.5) {
 		if (treeVars["NNoutY"] > 0.5) treeVars["sorting"] = 1.0;
@@ -231,6 +249,12 @@ for (int i = 0; i < origFiles->GetEntries(); i++){
 		else treeVars["sorting"] = 0.0;
 	}
 	else treeVars["sorting"] = 4.0;
+
+
+	std::vector<float> a{ distTo0, distTo1, distTo2, distTo3, distTo4};
+	std::vector<float>::iterator result = std::min_element(std::begin(a), std::end(a));
+
+	treeVars["minDist"] = std::distance(std::begin(a), result);
 
 
 
