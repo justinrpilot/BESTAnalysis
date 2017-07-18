@@ -1,4 +1,4 @@
-void flatten(TString infile, TString outWeightFile, float etMin = 1000, float etMax = 4000){
+void flatten(TString infile, TString outWeightFile, float etMin = 500, float etMax = 4000){
 
 
 	TFile *inF = TFile::Open(infile, "READ");

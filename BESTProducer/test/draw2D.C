@@ -1,6 +1,12 @@
 {
 
-
+gStyle->SetTitleFont(42, "xyz");
+gStyle->SetLabelFont(42, "xyz");
+gStyle->SetLabelSize(0.055, "xyz");
+gStyle->SetTitleSize(0.055, "xyz");
+gStyle->SetTitleOffset(1.15, "xy");
+gStyle->SetTitleOffset(0.8, "z");
+gStyle->SetLegendFont(42);
 
 TFile *fileJJ = new TFile("out_QCDall.root", "READ");
 //jjHist = (TH2F *) fileJJ->Get("outXY")->Clone("jjHist");
@@ -16,16 +22,16 @@ TTree *treeZZ = (TTree *) fileZZ->Get("jetTree");
 TTree *treeWW = (TTree *) fileWW->Get("jetTree");
 TTree *treeJJ = (TTree *) fileJJ->Get("jetTree");
 TTree *treeHH = (TTree *) fileHH->Get("jetTree");
-TH2F *jjHist = new TH2F("jjHist", "jjHist", 1000, -1.2, 1.2, 1000, -1.2, 1.2);
-TH2F *wwHist = new TH2F("wwHist", "wwHist", 1000, -1.2, 1.2, 1000, -1.2, 1.2);
-TH2F *ttHist = new TH2F("ttHist", "ttHist", 1000, -1.2, 1.2, 1000, -1.2, 1.2);
-TH2F *zzHist = new TH2F("zzHist", "zzHist", 1000, -1.2, 1.2, 1000, -1.2, 1.2);
-TH2F *hhHist = new TH2F("hhHist", "hhHist", 1000, -1.2, 1.2, 1000, -1.2, 1.2);
+TH2F *jjHist = new TH2F("jjHist", "jjHist", 50, -1.2, 1.2, 50, -1.2, 1.2);
+TH2F *wwHist = new TH2F("wwHist", "wwHist", 50, -1.2, 1.2, 50, -1.2, 1.2);
+TH2F *ttHist = new TH2F("ttHist", "ttHist", 50, -1.2, 1.2, 50, -1.2, 1.2);
+TH2F *zzHist = new TH2F("zzHist", "zzHist", 50, -1.2, 1.2, 50, -1.2, 1.2);
+TH2F *hhHist = new TH2F("hhHist", "hhHist", 50, -1.2, 1.2, 50, -1.2, 1.2);
 
 
 TCutG *gcut = new TCutG("gcut",32);
-gcut->SetVarX("(NNout3-NNout4)");
-gcut->SetVarY("(NNoutX-NNoutY)");
+gcut->SetVarX("(NNoutX-NNoutY)");
+gcut->SetVarY("(NNout4-NNout3)");
 
 float xinit = 0.0;
 float yinit = 0.0;
@@ -92,57 +98,105 @@ cout << wwHist->GetEntries() << endl;
 jjHist->SetLineColor(kBlue);
 ttHist->SetLineColor(kRed);
 wwHist->SetLineColor(kGreen);
-zzHist->SetLineColor(kYellow);
+zzHist->SetLineColor(kOrange);
 hhHist->SetLineColor(kViolet);
 jjHist->SetMarkerColor(kBlue);
 ttHist->SetMarkerColor(kRed);
 wwHist->SetMarkerColor(kGreen);
-zzHist->SetMarkerColor(kYellow);
+zzHist->SetMarkerColor(kOrange);
 hhHist->SetMarkerColor(kViolet);
-jjHist->SetLineWidth(0.5);
-ttHist->SetLineWidth(0.5);
-wwHist->SetLineWidth(0.5);
-zzHist->SetLineWidth(0.5);
-hhHist->SetLineWidth(0.5);
+//jjHist->SetLineWidth(0.5);
+//ttHist->SetLineWidth(0.5);
+//wwHist->SetLineWidth(0.5);
+//zzHist->SetLineWidth(0.5);
+//hhHist->SetLineWidth(0.5);
+jjHist->GetXaxis()->SetTitle("NN_{2} - NN_{4}");
+jjHist->GetYaxis()->SetTitle("NN_{1} - NN_{3}");
+hhHist->GetXaxis()->SetTitle("NN_{2} - NN_{4}");
+hhHist->GetYaxis()->SetTitle("NN_{1} - NN_{3}");
+ttHist->GetXaxis()->SetTitle("NN_{2} - NN_{4}");
+ttHist->GetYaxis()->SetTitle("NN_{1} - NN_{3}");
+zzHist->GetXaxis()->SetTitle("NN_{2} - NN_{4}");
+zzHist->GetYaxis()->SetTitle("NN_{1} - NN_{3}");
+wwHist->GetXaxis()->SetTitle("NN_{2} - NN_{4}");
+wwHist->GetYaxis()->SetTitle("NN_{1} - NN_{3}");
+jjHist->GetXaxis()->SetTitleOffset(1.60);
+jjHist->GetYaxis()->SetTitleOffset(1.60);
+hhHist->GetXaxis()->SetTitleOffset(1.60);
+hhHist->GetYaxis()->SetTitleOffset(1.60);
+ttHist->GetXaxis()->SetTitleOffset(1.60);
+ttHist->GetYaxis()->SetTitleOffset(1.60);
+wwHist->GetXaxis()->SetTitleOffset(1.60);
+wwHist->GetYaxis()->SetTitleOffset(1.60);
+zzHist->GetXaxis()->SetTitleOffset(1.60);
+zzHist->GetYaxis()->SetTitleOffset(1.60);
+jjHist->GetZaxis()->SetLabelSize(0);
+hhHist->GetZaxis()->SetLabelSize(0);
+ttHist->GetZaxis()->SetLabelSize(0);
+wwHist->GetZaxis()->SetLabelSize(0);
+zzHist->GetZaxis()->SetLabelSize(0);
+jjHist->GetZaxis()->SetTitle("QCD Jets");
+hhHist->GetZaxis()->SetTitle("Higgs Jets");
+ttHist->GetZaxis()->SetTitle("Top Quark Jets");
+wwHist->GetZaxis()->SetTitle("W Boson Jets");
+zzHist->GetZaxis()->SetTitle("Z Boson Jets");
 
-jjHist->Draw("scat");
-c1->SaveAs("jj_4dOutput.pdf");
+//ttHist->SetMaximum(100000.);
+//wwHist->SetMaximum(100000.);
+//zzHist->SetMaximum(100000.);
+//hhHist->SetMaximum(100000.);
+//jjHist->SetMaximum(100000.);
+jjHist->Draw("lego");
+CMS_lumi(c1, 4, 0);
+c1->SaveAs("jj_5dOutput_cuts.pdf");
 TCanvas *c2 = new TCanvas();
 c2->cd();
-ttHist->Draw("scat  ");
-c2->SaveAs("tt_4dOutput.pdf");
+ttHist->Draw("lego  ");
+CMS_lumi(c2, 4, 0);
+c2->SaveAs("tt_5dOutput_cuts.pdf");
 TCanvas *c5 = new TCanvas();
 c5->cd();
-wwHist->Draw("scat  ");
-c5->SaveAs("ww_4dOutput.pdf");
+wwHist->Draw("lego  ");
+CMS_lumi(c5, 4, 0);
+c5->SaveAs("ww_5dOutput_cuts.pdf");
 
 TCanvas *c4 = new TCanvas();
 c4->cd();
-zzHist->Draw("scat  ");
-c4->SaveAs("zz_4dOutput.pdf");
+zzHist->Draw("lego  ");
+CMS_lumi(c4, 4, 0);
+c4->SaveAs("zz_5dOutput_cuts.pdf");
 
 TCanvas *c3 = new TCanvas();
 c3->cd();
-hhHist->Draw("scat  ");
-c3->SaveAs("hh_4dOutput.pdf");
+hhHist->Draw("lego  ");
+CMS_lumi(c3, 4, 0);
+c3->SaveAs("hh_5dOutput_cuts.pdf");
 
 TCanvas *c6 = new TCanvas();
-ttHist->Draw("scat");
-wwHist->Draw("scat same");
-zzHist->Draw("scat same");
-hhHist->Draw("scat same");
-jjHist->Draw("scat same");
-c6->SaveAs("all_4dOutput.pdf");
+
+
+ttHist->Draw("cont3");
+wwHist->Draw("cont3 same");
+zzHist->Draw("cont3 same");
+hhHist->Draw("cont3 same");
+jjHist->Draw("cont3 same");
+gPad->SetLeftMargin(0.13);
+gPad->SetBottomMargin(0.13);
 
 
 
-TLegend *leg = new TLegend(0.1, 0.91, 0.91, 0.99);
-leg->SetNColumns(5);
-leg->AddEntry(jjHist, "QCD", "l");
-leg->AddEntry(ttHist, "Top", "l");
-leg->AddEntry(wwHist, "W", "l");
-leg->AddEntry(zzHist, "Z", "l");
-leg->AddEntry(hhHist, "H", "l");
+CMS_lumi(c6, 4, 0);
+c6->SaveAs("all_5dOutput_cuts.pdf");
+
+
+
+TLegend *leg = new TLegend(0.11, 0.58, 0.46, 0.89);
+leg->SetNColumns(1);
+leg->AddEntry(jjHist, "Light Jets", "l");
+leg->AddEntry(ttHist, "Top Jets", "l");
+leg->AddEntry(wwHist, "W Jets", "l");
+leg->AddEntry(zzHist, "Z Jets", "l");
+leg->AddEntry(hhHist, "H Jets", "l");
 leg->SetFillColor(0);
 leg->SetLineColor(0);
 leg->Draw("same");

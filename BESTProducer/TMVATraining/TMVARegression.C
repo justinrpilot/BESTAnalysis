@@ -186,11 +186,11 @@ void TMVARegression( TString myMethodList = "" )
    //factory->AddSpectator( "targetY",  "targetY", "", 'F' );
 
    // Add the variable carrying the regression target
-   //factory->AddTarget( "targetX" ); 
-   //factory->AddTarget( "targetY" ); 
-   //factory->AddTarget( "target3" ); 
-   //factory->AddTarget( "target4" ); 
-   factory->AddTarget( "targetX" );
+   factory->AddTarget( "targetX" ); 
+   factory->AddTarget( "targetY" ); 
+   factory->AddTarget( "target3" ); 
+   factory->AddTarget( "target4" ); 
+   factory->AddTarget( "target5" );
 
 
    // It is also possible to declare additional targets for multi-dimensional regression, ie:
@@ -239,7 +239,7 @@ void TMVARegression( TString myMethodList = "" )
 
    // tell the factory to use all remaining events in the trees after training for testing:
    factory->PrepareTrainingAndTestTree( mycut, 
-                                        "nTrain_Regression=0:nTest_Regression=0:SplitMode=Random:NormMode=NumEvents:!V" );
+                                        "nTrain_Regression=100000:nTest_Regression=100000:SplitMode=Random:NormMode=NumEvents:!V" );
 
    // If no numbers of events are given, half of the events in the tree are used 
    // for training, and the other half for testing:

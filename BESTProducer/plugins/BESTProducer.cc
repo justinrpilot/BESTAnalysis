@@ -93,14 +93,15 @@ class BESTProducer : public edm::stream::EDProducer<> {
         int NNtargetX_;
         int NNtargetY_;
 	int isMC_;
-
+	int doMatch_;
    
 	edm::EDGetTokenT<std::vector<pat::PackedCandidate> > pfCandsToken_;
 	edm::EDGetTokenT<std::vector<pat::Jet> > ak8JetsToken_;
+	edm::EDGetTokenT<std::vector<pat::Jet> > ak4JetsToken_;
 	edm::EDGetTokenT<std::vector<reco::GenParticle> > genPartToken_;
 
 	edm::EDGetTokenT<std::vector<pat::Jet> > ak8CHSSoftDropSubjetsToken_;
-
+	edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken_;
 
 
 
@@ -122,7 +123,8 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    pdgIDSrc_  (iConfig.getParameter<int>("pdgIDforMatch")),
    NNtargetX_  (iConfig.getParameter<int>("NNtargetX")),
    NNtargetY_  (iConfig.getParameter<int>("NNtargetY")),
-   isMC_ (iConfig.getParameter<int>("isMC"))
+   isMC_ (iConfig.getParameter<int>("isMC")),
+   doMatch_ (iConfig.getParameter<int>("doMatch"))
 {
    //register your products
 /* Examples
@@ -135,11 +137,69 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    produces<ExampleData2,InRun>();
 */
    //now do what ever other initialization is needed
-  produces<std::vector<double > >("FWmoment0");
-   produces<std::vector<double > >("FWmoment1");
-   produces<std::vector<double > >("FWmoment2");
-   produces<std::vector<double > >("FWmoment3");
-   produces<std::vector<double > >("FWmoment4");
+   produces<std::vector<float > >("FWmoment0");
+   produces<std::vector<float > >("FWmoment1");
+   produces<std::vector<float > >("FWmoment2");
+   produces<std::vector<float > >("FWmoment3");
+   produces<std::vector<float > >("FWmoment4");
+   produces<std::vector<float > >("sumPztop");
+   produces<std::vector<float > >("sumPzW");
+   produces<std::vector<float > >("sumPzZ");
+   produces<std::vector<float > >("sumPzH");
+   produces<std::vector<float > >("sumPzjet");
+   produces<std::vector<float > >("sumPtop");
+   produces<std::vector<float > >("sumPW");
+   produces<std::vector<float > >("sumPZ");
+   produces<std::vector<float > >("sumPH");
+   produces<std::vector<float > >("sumPjet");
+   produces<std::vector<float > >("Njetstop");
+   produces<std::vector<float > >("NjetsW");
+   produces<std::vector<float > >("NjetsZ");
+   produces<std::vector<float > >("NjetsH");
+   produces<std::vector<float > >("Njetsjet");
+   produces<std::vector<float > >("FWmoment1top");
+   produces<std::vector<float > >("FWmoment2top");
+   produces<std::vector<float > >("FWmoment3top");
+   produces<std::vector<float > >("FWmoment4top");
+   produces<std::vector<float > >("isotropytop");
+   produces<std::vector<float > >("sphericitytop");
+   produces<std::vector<float > >("aplanaritytop");
+   produces<std::vector<float > >("thrusttop");
+   produces<std::vector<float > >("FWmoment1W");
+   produces<std::vector<float > >("FWmoment2W");
+   produces<std::vector<float > >("FWmoment3W");
+   produces<std::vector<float > >("FWmoment4W");
+   produces<std::vector<float > >("isotropyW");
+   produces<std::vector<float > >("sphericityW");
+   produces<std::vector<float > >("aplanarityW");
+   produces<std::vector<float > >("thrustW");
+   produces<std::vector<float > >("FWmoment1Z");
+   produces<std::vector<float > >("FWmoment2Z");
+   produces<std::vector<float > >("FWmoment3Z");
+   produces<std::vector<float > >("FWmoment4Z");
+   produces<std::vector<float > >("isotropyZ");
+   produces<std::vector<float > >("sphericityZ");
+   produces<std::vector<float > >("aplanarityZ");
+   produces<std::vector<float > >("thrustZ");
+   produces<std::vector<float > >("FWmoment1H");
+   produces<std::vector<float > >("FWmoment2H");
+   produces<std::vector<float > >("FWmoment3H");
+   produces<std::vector<float > >("FWmoment4H");
+   produces<std::vector<float > >("isotropyH");
+   produces<std::vector<float > >("sphericityH");
+   produces<std::vector<float > >("aplanarityH");
+   produces<std::vector<float > >("thrustH");
+   produces<std::vector<float > >("et");
+   produces<std::vector<float > >("eta");
+   produces<std::vector<float > >("mass");
+   produces<std::vector<float > >("SDmass");
+   produces<std::vector<float > >("tau32");
+   produces<std::vector<float > >("tau21");
+   produces<std::vector<float > >("bDisc");
+   produces<std::vector<int > > ("nPV");
+   produces<std::vector<int > > ("nAK4Jets");
+   produces<std::vector<pat::Jet > >("savedJets");
+
 
    edm::Service<TFileService> fs;
    h_preBoostJet = fs->make<TH2F>("h_preBoostJet", "h_preBoostJet", 50, -3, 3, 50, -3.5, 3.5);
@@ -211,7 +271,7 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("sumP_Z");
    listOfVars.push_back("sumP_H");
    listOfVars.push_back("sumP_jet");
-
+   listOfVars.push_back("npv");
 
 for (unsigned i = 0; i < listOfVars.size(); i++){
 
@@ -226,28 +286,36 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
 
    edm::InputTag pfCandsTag_;
    edm::InputTag ak8JetsTag_;
+   edm::InputTag ak4JetsTag_;
    edm::InputTag genPartTag_;
    edm::InputTag ak8subjetsTag_;
-
+   edm::InputTag verticesTag_;
 
    if (isMC_){
    pfCandsTag_ = edm::InputTag("packedPFCandidates", "", "PAT");
    ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
+   ak4JetsTag_ = edm::InputTag("slimmedJets", "", "PAT");
    genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
    ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "PAT");
+   verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
    }
    else {
    pfCandsTag_ = edm::InputTag("packedPFCandidates", "", "RECO");
    ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "RECO");
+   ak4JetsTag_ = edm::InputTag("slimmedJets", "", "RECO");
    genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
    ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "RECO");
+   verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "RECO");
    }
    
 
+
    pfCandsToken_ = consumes<std::vector<pat::PackedCandidate> >(pfCandsTag_);
    ak8JetsToken_ = consumes<std::vector<pat::Jet> >(ak8JetsTag_);
+   ak4JetsToken_ = consumes<std::vector<pat::Jet> >(ak4JetsTag_);
    genPartToken_ = consumes<std::vector<reco::GenParticle> >(genPartTag_);
    ak8CHSSoftDropSubjetsToken_ = consumes<std::vector<pat::Jet> >( ak8subjetsTag_ );
+   verticesToken_ = consumes<std::vector<reco::Vertex> >(verticesTag_);
 
 }
 
@@ -280,11 +348,69 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
-   std::auto_ptr< std::vector<double > > fw_moments_0( new std::vector<double>() );
-   std::auto_ptr< std::vector<double > > fw_moments_1( new std::vector<double>() );
-   std::auto_ptr< std::vector<double > > fw_moments_2( new std::vector<double>() );
-   std::auto_ptr< std::vector<double > > fw_moments_3( new std::vector<double>() );
-   std::auto_ptr< std::vector<double > > fw_moments_4( new std::vector<double>() );
+   std::auto_ptr< std::vector<float > > fw_moments_0( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_1( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_2( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_3( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_4( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPztop( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPzW( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPzZ( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPzH( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPzjet( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPtop( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPW( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPZ( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPH( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sumPjet( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > Njetstop( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > NjetsW( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > NjetsZ( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > NjetsH( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > Njetsjet( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_1_top( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_2_top( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_3_top( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_4_top( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > isotropy_top( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sphericity_top( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > aplanarity_top( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > thrust_top( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_1_W( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_2_W( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_3_W( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_4_W( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > isotropy_W( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sphericity_W( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > aplanarity_W( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > thrust_W( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_1_Z( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_2_Z( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_3_Z( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_4_Z( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > isotropy_Z( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sphericity_Z( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > aplanarity_Z( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > thrust_Z( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_1_H( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_2_H( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_3_H( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > fw_moments_4_H( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > isotropy_H( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > sphericity_H( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > aplanarity_H( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > thrust_H( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > et( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > eta( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > mass( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > SDmass( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > tau32V( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > tau21V( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > bDiscV( new std::vector<float>() );
+   std::auto_ptr< std::vector<int > > vertV( new std::vector<int>() );
+   std::auto_ptr< std::vector<int > > nAK4JetsV( new std::vector<int>() );
+   std::auto_ptr< std::vector<pat::Jet > > savedJetsV( new std::vector<pat::Jet>() );
+
 
 
    Handle< std::vector<pat::PackedCandidate> > pfCands;
@@ -293,13 +419,20 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    Handle< std::vector<pat::Jet> > ak8Jets;
    iEvent.getByToken(ak8JetsToken_, ak8Jets);
 
+   Handle< std::vector<pat::Jet> > ak4Jets;
+   iEvent.getByToken(ak4JetsToken_, ak4Jets);
+   
    Handle< std::vector<reco::GenParticle> > genParticles;
    iEvent.getByToken(genPartToken_, genParticles);
 
    Handle< std::vector<pat::Jet> > ak8Subjets;
    iEvent.getByToken(ak8CHSSoftDropSubjetsToken_, ak8Subjets);
 
+   Handle< std::vector<reco::Vertex> > vertices;
+   iEvent.getByToken(verticesToken_, vertices);
 
+   vertV->push_back(vertices->size() );
+   treeVars["npv"] = vertices->size();
 
 
    std::vector<TLorentzVector> genTops;
@@ -317,6 +450,17 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    }
 
+   int nAK4Jets = 0;
+   for (std::vector<pat::Jet>::const_iterator jetBegin = ak4Jets->begin(), jetEnd = ak4Jets->end(), ijet = jetBegin; ijet != jetEnd; ++ijet){
+
+	if (ijet->pt() < 30 || abs( ijet->eta() ) > 2.4) continue;
+	nAK4Jets++;
+
+
+   }
+
+   nAK4JetsV->push_back(nAK4Jets);
+
    int nJets = 0;
 
 
@@ -324,7 +468,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	bool match = false;
 
-	if (isMC_){
+	if (isMC_ && doMatch_){
 	for (size_t i = 0; i < genTops.size(); i++){
 
 		TLorentzVector thisjetLV(ijet->px(), ijet->py(), ijet->pz(), ijet->energy());
@@ -335,7 +479,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	}
 
 	nJets++;
-	if (isMC_) { if (!match) continue; }
+	if (isMC_ && doMatch_) { if (!match) continue; }
 	if (ijet->pt() < 200) continue;
 
 
@@ -669,6 +813,61 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	treeVars["aplanarity_H"] = eventShapes_H.aplanarity(2);
 	treeVars["thrust_H"] = thrustCalculator_H.thrust();
 
+   sumPztop->push_back( treeVars["sumPz_top"]);
+   sumPzW->push_back( treeVars["sumPz_W"]);
+   sumPzZ->push_back( treeVars["sumPz_Z"]);
+   sumPzH->push_back( treeVars["sumPz_H"]);
+   sumPzjet->push_back( treeVars["sumPz_jet"]);
+   sumPtop->push_back( treeVars["sumP_top"]);
+   sumPW->push_back( treeVars["sumP_W"]);
+   sumPZ->push_back( treeVars["sumP_Z"]);
+   sumPH->push_back( treeVars["sumP_H"]);
+   sumPjet->push_back( treeVars["sumP_jet"]);
+   Njetstop->push_back( treeVars["Njets_top"]);
+   NjetsW->push_back( treeVars["Njets_W"]);
+   NjetsZ->push_back( treeVars["Njets_Z"]);
+   NjetsH->push_back( treeVars["Njets_H"]);
+   Njetsjet->push_back( treeVars["Njets_jet"]);
+   fw_moments_1_top->push_back( treeVars["h1_top"]);
+   fw_moments_2_top->push_back( treeVars["h2_top"]);
+   fw_moments_3_top->push_back( treeVars["h3_top"]);
+   fw_moments_4_top->push_back( treeVars["h4_top"]);
+   isotropy_top->push_back( treeVars["isotropy_top"]);
+   sphericity_top->push_back( treeVars["sphericity_top"]);
+   aplanarity_top->push_back( treeVars["aplanarity_top"]);
+   thrust_top->push_back( treeVars["thrust_top"]);
+   fw_moments_1_W->push_back( treeVars["h1_W"]);
+   fw_moments_2_W->push_back( treeVars["h2_W"]);
+   fw_moments_3_W->push_back( treeVars["h3_W"]);
+   fw_moments_4_W->push_back( treeVars["h4_W"]);
+   isotropy_W->push_back( treeVars["isotropy_W"]);
+   sphericity_W->push_back( treeVars["sphericity_W"]);
+   aplanarity_W->push_back( treeVars["aplanarity_W"]);
+   thrust_W->push_back( treeVars["thrust_W"]);
+   fw_moments_1_Z->push_back( treeVars["h1_Z"]);
+   fw_moments_2_Z->push_back( treeVars["h2_Z"]);
+   fw_moments_3_Z->push_back( treeVars["h3_Z"]);
+   fw_moments_4_Z->push_back( treeVars["h4_Z"]);
+   isotropy_Z->push_back( treeVars["isotropy_Z"]);
+   sphericity_Z->push_back( treeVars["sphericity_Z"]);
+   aplanarity_Z->push_back( treeVars["aplanarity_Z"]);
+   thrust_Z->push_back( treeVars["thrust_Z"]);
+   fw_moments_1_H->push_back( treeVars["h1_H"]);
+   fw_moments_2_H->push_back( treeVars["h2_H"]);
+   fw_moments_3_H->push_back( treeVars["h3_H"]);
+   fw_moments_4_H->push_back( treeVars["h4_H"]);
+   isotropy_H->push_back( treeVars["isotropy_H"]);
+   sphericity_H->push_back( treeVars["sphericity_H"]);
+   aplanarity_H->push_back( treeVars["aplanarity_H"]);
+   thrust_H->push_back( treeVars["thrust_H"]);
+   et->push_back( treeVars["et"]);
+   eta->push_back( treeVars["eta"]);
+   mass->push_back( treeVars["mass"]);
+   SDmass->push_back( treeVars["SDmass"]);
+   tau32V->push_back( treeVars["tau32"]);
+   tau21V->push_back( treeVars["tau21"]);
+   bDiscV->push_back( treeVars["bDisc"]);
+   savedJetsV->push_back( *ijet );
 
 
 
@@ -693,10 +892,66 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put( fw_moments_2, "FWmoment2");
    iEvent.put( fw_moments_3, "FWmoment3");
    iEvent.put( fw_moments_4, "FWmoment4");
+   iEvent.put( sumPztop, "sumPztop");
+   iEvent.put( sumPzW, "sumPzW");
+   iEvent.put( sumPzZ, "sumPzZ");
+   iEvent.put( sumPzH, "sumPzH");
+   iEvent.put( sumPzjet, "sumPzjet");
+   iEvent.put( sumPtop, "sumPtop");
+   iEvent.put( sumPW, "sumPW");
+   iEvent.put( sumPZ, "sumPZ");
+   iEvent.put( sumPH, "sumPH");
+   iEvent.put( sumPjet, "sumPjet");
+   iEvent.put( Njetstop, "Njetstop");
+   iEvent.put( NjetsW, "NjetsW");
+   iEvent.put( NjetsZ, "NjetsZ");
+   iEvent.put( NjetsH, "NjetsH");
+   iEvent.put( Njetsjet, "Njetsjet");
+   iEvent.put( fw_moments_1_top, "FWmoment1top");
+   iEvent.put( fw_moments_2_top, "FWmoment2top");
+   iEvent.put( fw_moments_3_top, "FWmoment3top");
+   iEvent.put( fw_moments_4_top, "FWmoment4top");
+   iEvent.put( isotropy_top, "isotropytop");
+   iEvent.put( sphericity_top, "sphericitytop");
+   iEvent.put( aplanarity_top, "aplanaritytop");
+   iEvent.put( thrust_top, "thrusttop");
+   iEvent.put( fw_moments_1_W, "FWmoment1W");
+   iEvent.put( fw_moments_2_W, "FWmoment2W");
+   iEvent.put( fw_moments_3_W, "FWmoment3W");
+   iEvent.put( fw_moments_4_W, "FWmoment4W");
+   iEvent.put( isotropy_W, "isotropyW");
+   iEvent.put( sphericity_W, "sphericityW");
+   iEvent.put( aplanarity_W, "aplanarityW");
+   iEvent.put( thrust_W, "thrustW");
+   iEvent.put( fw_moments_1_Z, "FWmoment1Z");
+   iEvent.put( fw_moments_2_Z, "FWmoment2Z");
+   iEvent.put( fw_moments_3_Z, "FWmoment3Z");
+   iEvent.put( fw_moments_4_Z, "FWmoment4Z");
+   iEvent.put( isotropy_Z, "isotropyZ");
+   iEvent.put( sphericity_Z, "sphericityZ");
+   iEvent.put( aplanarity_Z, "aplanarityZ");
+   iEvent.put( thrust_Z, "thrustZ");
+   iEvent.put( fw_moments_1_H, "FWmoment1H");
+   iEvent.put( fw_moments_2_H, "FWmoment2H");
+   iEvent.put( fw_moments_3_H, "FWmoment3H");
+   iEvent.put( fw_moments_4_H, "FWmoment4H");
+   iEvent.put( isotropy_H, "isotropyH");
+   iEvent.put( sphericity_H, "sphericityH");
+   iEvent.put( aplanarity_H, "aplanarityH");
+   iEvent.put( thrust_H, "thrustH");
+   iEvent.put( et, "et");
+   iEvent.put( eta, "eta");
+   iEvent.put( mass, "mass");
+   iEvent.put( SDmass, "SDmass");
+   iEvent.put( tau32V, "tau32");
+   iEvent.put( tau21V, "tau21");
+   iEvent.put( bDiscV, "bDisc");
+   iEvent.put( vertV, "nPV");
+   iEvent.put( nAK4JetsV, "nAK4Jets");
+   iEvent.put( savedJetsV, "savedJets");
 
 
-
-
+   
 
 
 }

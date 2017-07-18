@@ -10,8 +10,8 @@ process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
 
-#	'file:////uscmst1b_scratch/lpc1/3DayLifetime/pilot/1A405524-3E3D-E611-B103-047D7BD6DDB2.root'
-	'/store/mc/RunIISpring16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/70000/1A405524-3E3D-E611-B103-047D7BD6DDB2.root'
+	'file:////uscmst1b_scratch/lpc1/3DayLifetime/pilot/1A405524-3E3D-E611-B103-047D7BD6DDB2.root'
+#	'root://cmsxrootd-site.fnal.gov//store/mc/RunIISpring16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/70000/1A405524-3E3D-E611-B103-047D7BD6DDB2.root'
 
 	)
 )
@@ -26,7 +26,7 @@ process.run = cms.EDProducer('BESTProducer',
 
 )
 
-process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_TT.root") )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_smWjets.root") )
 
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string("ana_out.root"),

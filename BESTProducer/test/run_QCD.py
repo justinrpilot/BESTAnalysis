@@ -20,7 +20,8 @@ process.run = cms.EDProducer('BESTProducer',
 	pdgIDforMatch = cms.int32(2),
 	NNtargetX = cms.int32(0),
 	NNtargetY = cms.int32(0),
-	isMC = cms.int32(1)
+	isMC = cms.int32(1),
+	doMatch = cms.int32(0)
 )
 
 process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_JJ.root") )
