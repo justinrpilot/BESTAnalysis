@@ -25,6 +25,7 @@ To run:
 Several files are available (run_TT.py, run_WW.py, etc.) and can be configured according to the sample of interest with the following options:
 
 process.run = cms.EDProducer('BESTProducer',
+
 	pdgIDforMatch = cms.int32(6),  → the particle used for jet matching
 	NNtargetX = cms.int32(1),  → not used
 	NNtargetY = cms.int32(1),  → not used anymore
