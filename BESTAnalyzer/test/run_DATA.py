@@ -10,26 +10,24 @@ process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
 
-#	'file:////uscmst1b_scratch/lpc1/3DayLifetime/pilot/1A405524-3E3D-E611-B103-047D7BD6DDB2.root'
-	'/store/mc/RunIISpring16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/70000/1A405524-3E3D-E611-B103-047D7BD6DDB2.root'
+
+	'root://cmsxrootd-site.fnal.gov//store/data/Run2016B/JetHT/MINIAOD/23Sep2016-v3/00000/00144F9E-BA97-E611-A8B0-00259074AE48.root'
 
 	)
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.BESTProducer = cms.EDProducer('BESTProducer',
-	pdgIDforMatch = cms.int32(6),
-	NNtargetX = cms.int32(1),
+	pdgIDforMatch = cms.int32(24),
+	NNtargetX = cms.int32(0),
 	NNtargetY = cms.int32(1),
-	isMC = cms.int32(1),
+	isMC = cms.int32(0),
 	doMatch = cms.int32(0)
-
 )
-
 
 process.BESTAnalyzer = cms.EDProducer('BESTAnalyzer')
 
-process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_TT.root") )
+process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_DATA.root") )
 
 process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string("ana_out.root"),

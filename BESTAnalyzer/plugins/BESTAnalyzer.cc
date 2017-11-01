@@ -20,6 +20,7 @@
 // system include files
 #include <memory>
 #include <iostream>
+#include <vector>
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/stream/EDProducer.h"
@@ -30,6 +31,13 @@
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/StreamID.h"
 
+#include "DataFormats/PatCandidates/interface/Jet.h"
+
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
+
+#include "TLorentzVector.h"
+#include "TTree.h"
 #include "TMVA/Reader.h"
 #include "TMVA/Tools.h"
 
@@ -55,74 +63,95 @@ class BESTAnalyzer : public edm::stream::EDProducer<> {
       //virtual void endLuminosityBlock(edm::LuminosityBlock const&, edm::EventSetup const&) override;
 
       // ----------member data ---------------------------
-      edm::EDGetTokenT<std::vector<double> > fwm0Token_;
-      edm::EDGetTokenT<std::vector<double> > fwm1Token_;
-      edm::EDGetTokenT<std::vector<double> > fwm2Token_;
-      edm::EDGetTokenT<std::vector<double> > fwm3Token_;
-      edm::EDGetTokenT<std::vector<double> > fwm4Token_;
+      edm::EDGetTokenT<std::vector<float> > fwm0Token_;
+      edm::EDGetTokenT<std::vector<float> > fwm1Token_;
+      edm::EDGetTokenT<std::vector<float> > fwm2Token_;
+      edm::EDGetTokenT<std::vector<float> > fwm3Token_;
+      edm::EDGetTokenT<std::vector<float> > fwm4Token_;
 
-      edm::EDGetTokenT<std::vector<double> > sumPztopToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPzWToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPzZToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPzHToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPzjetToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPtopToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPWToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPZToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPHToken_;
-      edm::EDGetTokenT<std::vector<double> > sumPjetToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPztopToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPzWToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPzZToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPzHToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPzjetToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPtopToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPWToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPZToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPHToken_;
+      edm::EDGetTokenT<std::vector<float> > sumPjetToken_;
 
-      edm::EDGetTokenT<std::vector<double> > NjetstopToken_;
-      edm::EDGetTokenT<std::vector<double> > NjetsWToken_;
-      edm::EDGetTokenT<std::vector<double> > NjetsZToken_;
-      edm::EDGetTokenT<std::vector<double> > NjetsHToken_;
-      edm::EDGetTokenT<std::vector<double> > NjetsjetToken_;
+      edm::EDGetTokenT<std::vector<float> > NjetstopToken_;
+      edm::EDGetTokenT<std::vector<float> > NjetsWToken_;
+      edm::EDGetTokenT<std::vector<float> > NjetsZToken_;
+      edm::EDGetTokenT<std::vector<float> > NjetsHToken_;
+      edm::EDGetTokenT<std::vector<float> > NjetsjetToken_;
 
-      edm::EDGetTokenT<std::vector<double> > FWmoment1topToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment2topToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment3topToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment4topToken_;
-      edm::EDGetTokenT<std::vector<double> > isotropytopToken_;
-      edm::EDGetTokenT<std::vector<double> > sphericitytopToken_;
-      edm::EDGetTokenT<std::vector<double> > aplanaritytopToken_;
-      edm::EDGetTokenT<std::vector<double> > thrusttopToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment1WToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment2WToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment3WToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment4WToken_;
-      edm::EDGetTokenT<std::vector<double> > isotropyWToken_;
-      edm::EDGetTokenT<std::vector<double> > sphericityWToken_;
-      edm::EDGetTokenT<std::vector<double> > aplanarityWToken_;
-      edm::EDGetTokenT<std::vector<double> > thrustWToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment1ZToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment2ZToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment3ZToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment4ZToken_;
-      edm::EDGetTokenT<std::vector<double> > isotropyZToken_;
-      edm::EDGetTokenT<std::vector<double> > sphericityZToken_;
-      edm::EDGetTokenT<std::vector<double> > aplanarityZToken_;
-      edm::EDGetTokenT<std::vector<double> > thrustZToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment1HToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment2HToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment3HToken_;
-      edm::EDGetTokenT<std::vector<double> > FWmoment4HToken_;
-      edm::EDGetTokenT<std::vector<double> > isotropyHToken_;
-      edm::EDGetTokenT<std::vector<double> > sphericityHToken_;
-      edm::EDGetTokenT<std::vector<double> > aplanarityHToken_;
-      edm::EDGetTokenT<std::vector<double> > thrustHToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment1topToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment2topToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment3topToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment4topToken_;
+      edm::EDGetTokenT<std::vector<float> > isotropytopToken_;
+      edm::EDGetTokenT<std::vector<float> > sphericitytopToken_;
+      edm::EDGetTokenT<std::vector<float> > aplanaritytopToken_;
+      edm::EDGetTokenT<std::vector<float> > thrusttopToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment1WToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment2WToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment3WToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment4WToken_;
+      edm::EDGetTokenT<std::vector<float> > isotropyWToken_;
+      edm::EDGetTokenT<std::vector<float> > sphericityWToken_;
+      edm::EDGetTokenT<std::vector<float> > aplanarityWToken_;
+      edm::EDGetTokenT<std::vector<float> > thrustWToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment1ZToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment2ZToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment3ZToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment4ZToken_;
+      edm::EDGetTokenT<std::vector<float> > isotropyZToken_;
+      edm::EDGetTokenT<std::vector<float> > sphericityZToken_;
+      edm::EDGetTokenT<std::vector<float> > aplanarityZToken_;
+      edm::EDGetTokenT<std::vector<float> > thrustZToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment1HToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment2HToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment3HToken_;
+      edm::EDGetTokenT<std::vector<float> > FWmoment4HToken_;
+      edm::EDGetTokenT<std::vector<float> > isotropyHToken_;
+      edm::EDGetTokenT<std::vector<float> > sphericityHToken_;
+      edm::EDGetTokenT<std::vector<float> > aplanarityHToken_;
+      edm::EDGetTokenT<std::vector<float> > thrustHToken_;
 
-      edm::EDGetTokenT<std::vector<double> > etToken_;
-      edm::EDGetTokenT<std::vector<double> > etaToken_;
-      edm::EDGetTokenT<std::vector<double> > massToken_;
-      edm::EDGetTokenT<std::vector<double> > SDmassToken_;
-      edm::EDGetTokenT<std::vector<double> > tau32Token_;
-      edm::EDGetTokenT<std::vector<double> > tau21Token_;
+      edm::EDGetTokenT<std::vector<float> > etToken_;
+      edm::EDGetTokenT<std::vector<float> > etaToken_;
+      edm::EDGetTokenT<std::vector<float> > massToken_;
+      edm::EDGetTokenT<std::vector<float> > SDmassToken_;
+      edm::EDGetTokenT<std::vector<float> > tau32Token_;
+      edm::EDGetTokenT<std::vector<float> > tau21Token_;
+      edm::EDGetTokenT<std::vector<float> > bDiscToken_;
+      edm::EDGetTokenT<std::vector<int> > vertToken_;
+      edm::EDGetTokenT<std::vector<int> > decayModeToken_;
+      edm::EDGetTokenT<std::vector<int> > nak4JetsToken_; 
 
+      edm::EDGetTokenT<std::vector<pat::Jet> > savedJetsToken_;
 
-      TMVA::Reader *reader = new TMVA::Reader();
+      TMVA::Reader *reader;
       std::vector<std::string> listOfVars;
-      std::map<std::string, float> treeVars;
+      
+      std::map<std::string, Float_t> treeVars;
 
+	TTree *eventTree;
+
+	std::vector<std::string> listOfEventVars;
+	std::map<std::string, float> eventVars;
+   std::vector<float> NNout1vals;
+   std::vector<float> NNout2vals;
+   std::vector<float> NNout3vals;
+   std::vector<float> NNout4vals;
+   std::vector<float> NNout5vals;
+   std::vector<float> etvals;
+   std::vector<float> etavals;
+   std::vector<float> phivals;
+   std::vector<float> massvals;
+   std::vector<float> sdmassvals;
+   std::vector<int> decayModevals;
 
 };
 
@@ -151,7 +180,7 @@ BESTAnalyzer::BESTAnalyzer(const edm::ParameterSet& iConfig)
    produces<ExampleData2,InRun>();
 */
    //now do what ever other initialization is needed
-   
+edm::Service<TFileService> fs;   
 
 edm::InputTag    fwm0Tag_ = edm::InputTag("BESTProducer", "FWmoment0", "run");
 edm::InputTag    fwm1Tag_ = edm::InputTag("BESTProducer", "FWmoment1", "run");
@@ -211,69 +240,82 @@ edm::InputTag    massTag_ = edm::InputTag("BESTProducer", "mass", "run");
 edm::InputTag    SDmassTag_ = edm::InputTag("BESTProducer", "SDmass", "run");
 edm::InputTag    tau32Tag_ = edm::InputTag("BESTProducer", "tau32", "run");
 edm::InputTag    tau21Tag_ = edm::InputTag("BESTProducer", "tau21", "run");
-    
+edm::InputTag    bDiscTag_ = edm::InputTag("BESTProducer", "bDisc", "run"); 
+edm::InputTag    vertTag_ = edm::InputTag("BESTProducer", "nPV", "run");
+edm::InputTag    decayModeTag_ = edm::InputTag("BESTProducer", "decayMode", "run");
+edm::InputTag    nak4JetsTag_ = edm::InputTag("BESTProducer", "nAK4Jets", "run");
+edm::InputTag    savedJetsTag_ = edm::InputTag("BESTProducer", "savedJets", "run");
 
-   fwm0Token_ = consumes<std::vector<double> >(fwm0Tag_);
-   fwm1Token_ = consumes<std::vector<double> >(fwm1Tag_);
-   fwm2Token_ = consumes<std::vector<double> >(fwm2Tag_);
-   fwm3Token_ = consumes<std::vector<double> >(fwm3Tag_);
-   fwm4Token_ = consumes<std::vector<double> >(fwm4Tag_);
-   NjetstopToken_ = consumes<std::vector<double> >(NjetstopTag_);
-   NjetsWToken_ = consumes<std::vector<double> >(NjetsWTag_);
-   NjetsZToken_ = consumes<std::vector<double> >(NjetsZTag_);
-   NjetsHToken_ = consumes<std::vector<double> >(NjetsHTag_);
-   NjetsjetToken_ = consumes<std::vector<double> >(NjetsjetTag_);
 
-   sumPztopToken_ = consumes<std::vector<double> >(sumPztopTag_); 
-   sumPzWToken_ = consumes<std::vector<double> >(sumPzWTag_); 
-   sumPzZToken_ = consumes<std::vector<double> >(sumPzZTag_); 
-   sumPzHToken_ = consumes<std::vector<double> >(sumPzHTag_); 
-   sumPzjetToken_ = consumes<std::vector<double> >(sumPzjetTag_); 
-   sumPtopToken_ = consumes<std::vector<double> >(sumPtopTag_); 
-   sumPWToken_ = consumes<std::vector<double> >(sumPWTag_); 
-   sumPZToken_ = consumes<std::vector<double> >(sumPZTag_); 
-   sumPHToken_ = consumes<std::vector<double> >(sumPHTag_); 
-   sumPjetToken_ = consumes<std::vector<double> >(sumPjetTag_); 
+   fwm0Token_ = consumes<std::vector<float> >(fwm0Tag_);
+   fwm1Token_ = consumes<std::vector<float> >(fwm1Tag_);
+   fwm2Token_ = consumes<std::vector<float> >(fwm2Tag_);
+   fwm3Token_ = consumes<std::vector<float> >(fwm3Tag_);
+   fwm4Token_ = consumes<std::vector<float> >(fwm4Tag_);
+   NjetstopToken_ = consumes<std::vector<float> >(NjetstopTag_);
+   NjetsWToken_ = consumes<std::vector<float> >(NjetsWTag_);
+   NjetsZToken_ = consumes<std::vector<float> >(NjetsZTag_);
+   NjetsHToken_ = consumes<std::vector<float> >(NjetsHTag_);
+   NjetsjetToken_ = consumes<std::vector<float> >(NjetsjetTag_);
 
-   FWmoment1topToken_ = consumes<std::vector<double> >(FWmoment1topTag_);
-   FWmoment2topToken_ = consumes<std::vector<double> >(FWmoment2topTag_);
-   FWmoment3topToken_ = consumes<std::vector<double> >(FWmoment3topTag_);
-   FWmoment4topToken_ = consumes<std::vector<double> >(FWmoment4topTag_);
-   isotropytopToken_ = consumes<std::vector<double> >(isotropytopTag_);
-   sphericitytopToken_ = consumes<std::vector<double> >(sphericitytopTag_);
-   aplanaritytopToken_ = consumes<std::vector<double> >(aplanaritytopTag_);
-   thrusttopToken_ = consumes<std::vector<double> >(thrusttopTag_);
-   FWmoment1WToken_ = consumes<std::vector<double> >(FWmoment1WTag_);
-   FWmoment2WToken_ = consumes<std::vector<double> >(FWmoment2WTag_);
-   FWmoment3WToken_ = consumes<std::vector<double> >(FWmoment3WTag_);
-   FWmoment4WToken_ = consumes<std::vector<double> >(FWmoment4WTag_);
-   isotropyWToken_ = consumes<std::vector<double> >(isotropyWTag_);
-   sphericityWToken_ = consumes<std::vector<double> >(sphericityWTag_);
-   aplanarityWToken_ = consumes<std::vector<double> >(aplanarityWTag_);
-   thrustWToken_ = consumes<std::vector<double> >(thrustWTag_);
-   FWmoment1ZToken_ = consumes<std::vector<double> >(FWmoment1ZTag_);
-   FWmoment2ZToken_ = consumes<std::vector<double> >(FWmoment2ZTag_);
-   FWmoment3ZToken_ = consumes<std::vector<double> >(FWmoment3ZTag_);
-   FWmoment4ZToken_ = consumes<std::vector<double> >(FWmoment4ZTag_);
-   isotropyZToken_ = consumes<std::vector<double> >(isotropyZTag_);
-   sphericityZToken_ = consumes<std::vector<double> >(sphericityZTag_);
-   aplanarityZToken_ = consumes<std::vector<double> >(aplanarityZTag_);
-   thrustZToken_ = consumes<std::vector<double> >(thrustZTag_);
-   FWmoment1HToken_ = consumes<std::vector<double> >(FWmoment1HTag_);
-   FWmoment2HToken_ = consumes<std::vector<double> >(FWmoment2HTag_);
-   FWmoment3HToken_ = consumes<std::vector<double> >(FWmoment3HTag_);
-   FWmoment4HToken_ = consumes<std::vector<double> >(FWmoment4HTag_);
-   isotropyHToken_ = consumes<std::vector<double> >(isotropyHTag_);
-   sphericityHToken_ = consumes<std::vector<double> >(sphericityHTag_);
-   aplanarityHToken_ = consumes<std::vector<double> >(aplanarityHTag_);
-   thrustHToken_ = consumes<std::vector<double> >(thrustHTag_);
+   sumPztopToken_ = consumes<std::vector<float> >(sumPztopTag_); 
+   sumPzWToken_ = consumes<std::vector<float> >(sumPzWTag_); 
+   sumPzZToken_ = consumes<std::vector<float> >(sumPzZTag_); 
+   sumPzHToken_ = consumes<std::vector<float> >(sumPzHTag_); 
+   sumPzjetToken_ = consumes<std::vector<float> >(sumPzjetTag_); 
+   sumPtopToken_ = consumes<std::vector<float> >(sumPtopTag_); 
+   sumPWToken_ = consumes<std::vector<float> >(sumPWTag_); 
+   sumPZToken_ = consumes<std::vector<float> >(sumPZTag_); 
+   sumPHToken_ = consumes<std::vector<float> >(sumPHTag_); 
+   sumPjetToken_ = consumes<std::vector<float> >(sumPjetTag_); 
 
-   etToken_ = consumes<std::vector<double> >(etTag_);
-   etaToken_ = consumes<std::vector<double> >(etaTag_); 
-   massToken_ = consumes<std::vector<double> >(massTag_); 
-   SDmassToken_ = consumes<std::vector<double> >(SDmassTag_); 
-   tau32Token_ = consumes<std::vector<double> >(tau32Tag_); 
-   tau21Token_ = consumes<std::vector<double> >(tau21Tag_); 
+   FWmoment1topToken_ = consumes<std::vector<float> >(FWmoment1topTag_);
+   FWmoment2topToken_ = consumes<std::vector<float> >(FWmoment2topTag_);
+   FWmoment3topToken_ = consumes<std::vector<float> >(FWmoment3topTag_);
+   FWmoment4topToken_ = consumes<std::vector<float> >(FWmoment4topTag_);
+   isotropytopToken_ = consumes<std::vector<float> >(isotropytopTag_);
+   sphericitytopToken_ = consumes<std::vector<float> >(sphericitytopTag_);
+   aplanaritytopToken_ = consumes<std::vector<float> >(aplanaritytopTag_);
+   thrusttopToken_ = consumes<std::vector<float> >(thrusttopTag_);
+   FWmoment1WToken_ = consumes<std::vector<float> >(FWmoment1WTag_);
+   FWmoment2WToken_ = consumes<std::vector<float> >(FWmoment2WTag_);
+   FWmoment3WToken_ = consumes<std::vector<float> >(FWmoment3WTag_);
+   FWmoment4WToken_ = consumes<std::vector<float> >(FWmoment4WTag_);
+   isotropyWToken_ = consumes<std::vector<float> >(isotropyWTag_);
+   sphericityWToken_ = consumes<std::vector<float> >(sphericityWTag_);
+   aplanarityWToken_ = consumes<std::vector<float> >(aplanarityWTag_);
+   thrustWToken_ = consumes<std::vector<float> >(thrustWTag_);
+   FWmoment1ZToken_ = consumes<std::vector<float> >(FWmoment1ZTag_);
+   FWmoment2ZToken_ = consumes<std::vector<float> >(FWmoment2ZTag_);
+   FWmoment3ZToken_ = consumes<std::vector<float> >(FWmoment3ZTag_);
+   FWmoment4ZToken_ = consumes<std::vector<float> >(FWmoment4ZTag_);
+   isotropyZToken_ = consumes<std::vector<float> >(isotropyZTag_);
+   sphericityZToken_ = consumes<std::vector<float> >(sphericityZTag_);
+   aplanarityZToken_ = consumes<std::vector<float> >(aplanarityZTag_);
+   thrustZToken_ = consumes<std::vector<float> >(thrustZTag_);
+   FWmoment1HToken_ = consumes<std::vector<float> >(FWmoment1HTag_);
+   FWmoment2HToken_ = consumes<std::vector<float> >(FWmoment2HTag_);
+   FWmoment3HToken_ = consumes<std::vector<float> >(FWmoment3HTag_);
+   FWmoment4HToken_ = consumes<std::vector<float> >(FWmoment4HTag_);
+   isotropyHToken_ = consumes<std::vector<float> >(isotropyHTag_);
+   sphericityHToken_ = consumes<std::vector<float> >(sphericityHTag_);
+   aplanarityHToken_ = consumes<std::vector<float> >(aplanarityHTag_);
+   thrustHToken_ = consumes<std::vector<float> >(thrustHTag_);
+
+   etToken_ = consumes<std::vector<float> >(etTag_);
+   etaToken_ = consumes<std::vector<float> >(etaTag_); 
+   massToken_ = consumes<std::vector<float> >(massTag_); 
+   SDmassToken_ = consumes<std::vector<float> >(SDmassTag_); 
+   tau32Token_ = consumes<std::vector<float> >(tau32Tag_); 
+   tau21Token_ = consumes<std::vector<float> >(tau21Tag_); 
+   bDiscToken_ = consumes<std::vector<float> > (bDiscTag_);
+   vertToken_ = consumes<std::vector<int> > (vertTag_);
+   decayModeToken_ = consumes<std::vector<int> > (decayModeTag_);
+   nak4JetsToken_ = consumes<std::vector<int> > (nak4JetsTag_);
+   savedJetsToken_ = consumes<std::vector<pat::Jet> > (savedJetsTag_);
+   
+
+
    listOfVars.push_back("et"); 
    listOfVars.push_back("eta"); 
    listOfVars.push_back("mass");
@@ -341,7 +383,7 @@ edm::InputTag    tau21Tag_ = edm::InputTag("BESTProducer", "tau21", "run");
    listOfVars.push_back("PzOverP_Z");
    listOfVars.push_back("PzOverP_H");
 
-
+   
    for (unsigned i = 0; i < listOfVars.size(); i++){
 
 	treeVars[ listOfVars[i] ] = -999.999;
@@ -349,6 +391,64 @@ edm::InputTag    tau21Tag_ = edm::InputTag("BESTProducer", "tau21", "run");
   }
 
 
+  eventTree = fs->make<TTree> ("eventTree", "eventTree");
+
+  listOfEventVars.push_back("jet0_SDmass");
+  listOfEventVars.push_back("jet0_tau32");
+  listOfEventVars.push_back("jet0_bDisc");
+  listOfEventVars.push_back("jet0_pt");
+  listOfEventVars.push_back("jet0_eta");
+  listOfEventVars.push_back("jet0_distToTop");
+  listOfEventVars.push_back("jet1_SDmass");
+  listOfEventVars.push_back("jet1_tau32");
+  listOfEventVars.push_back("jet1_bDisc");
+  listOfEventVars.push_back("jet1_pt");
+  listOfEventVars.push_back("jet1_eta");
+  listOfEventVars.push_back("jet1_distToTop");
+  listOfEventVars.push_back("nPV");
+  listOfEventVars.push_back("mjj");
+  listOfEventVars.push_back("dy");
+  listOfEventVars.push_back("Njets");
+  listOfEventVars.push_back("NjetsAK4");
+  listOfEventVars.push_back("jet0_NNout1");
+  listOfEventVars.push_back("jet0_NNout2");
+  listOfEventVars.push_back("jet0_NNout3");
+  listOfEventVars.push_back("jet0_NNout4");
+  listOfEventVars.push_back("jet1_NNout1");
+  listOfEventVars.push_back("jet1_NNout2");
+  listOfEventVars.push_back("jet1_NNout3");
+  listOfEventVars.push_back("jet1_NNout4");
+  listOfEventVars.push_back("jet0_NNout5");
+  listOfEventVars.push_back("jet1_NNout5");
+  listOfEventVars.push_back("numTop");
+  listOfEventVars.push_back("numW");
+  listOfEventVars.push_back("numZ");
+  listOfEventVars.push_back("numH");
+  listOfEventVars.push_back("numQCD");
+  listOfEventVars.push_back("ht");
+
+  for (unsigned i = 0; i < listOfEventVars.size(); i++){
+
+	eventVars[ listOfEventVars[i] ] = -999.9;
+	eventTree->Branch( (listOfEventVars[i]).c_str(), &(eventVars[ listOfEventVars[i] ]), (listOfEventVars[i]+"/F").c_str());
+
+  }
+
+
+   eventTree->Branch( "NNout1", &NNout1vals);
+   eventTree->Branch( "NNout2", &NNout2vals);
+   eventTree->Branch( "NNout3", &NNout3vals);
+   eventTree->Branch( "NNout4", &NNout4vals);
+   eventTree->Branch( "NNout5", &NNout5vals);
+   eventTree->Branch( "et", &etvals);
+   eventTree->Branch( "eta", &etavals);
+   eventTree->Branch( "phi", &phivals);
+   eventTree->Branch( "mass", &massvals);
+   eventTree->Branch( "sdmass", &sdmassvals);
+   eventTree->Branch( "decayMode", &decayModevals);
+
+   reader = new TMVA::Reader();
+   reader->SetVerbose(1);
    reader->AddVariable( "h1_top", &treeVars[ "h1_top" ] );
    reader->AddVariable( "h2_top", &treeVars[ "h2_top" ] );
    reader->AddVariable( "h3_top", &treeVars[ "h3_top" ] );
@@ -391,10 +491,7 @@ edm::InputTag    tau21Tag_ = edm::InputTag("BESTProducer", "tau21", "run");
    reader->AddVariable( "tau21", &treeVars["tau21"] );
    reader->AddVariable( "SDmass", &treeVars["SDmass"]);
 
-   reader->BookMVA("top", "TMVAClassification_MLPBFGS.weights.xml");
-   reader->BookMVA("W", "TMVAClassification_W_MLPBFGS.weights.xml");
-   reader->BookMVA("Z", "TMVAClassification_Z_MLPBFGS.weights.xml");
-   reader->BookMVA("H", "TMVAClassification_H_MLPBFGS.weights.xml");
+   reader->BookMVA("fived", "TMVARegression_MLP.weights.xml");
 
 
 
@@ -404,6 +501,7 @@ edm::InputTag    tau21Tag_ = edm::InputTag("BESTProducer", "tau21", "run");
 
 BESTAnalyzer::~BESTAnalyzer()
 {
+
  
    // do anything here that needs to be done at destruction time
    // (e.g. close files, deallocate resources etc.)
@@ -431,64 +529,69 @@ BESTAnalyzer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::unique_ptr<ExampleData2> pOut(new ExampleData2(*pIn));
    iEvent.put(std::move(pOut));
 */
-Handle< std::vector<double> >    fwm0Handle;
-Handle< std::vector<double> >    fwm1Handle;
-Handle< std::vector<double> >    fwm2Handle;
-Handle< std::vector<double> >    fwm3Handle;
-Handle< std::vector<double> >    fwm4Handle;
-Handle< std::vector<double> >    NjetstopHandle;
-Handle< std::vector<double> >    NjetsWHandle;
-Handle< std::vector<double> >    NjetsZHandle;
-Handle< std::vector<double> >    NjetsHHandle;
-Handle< std::vector<double> >    NjetsjetHandle;
-Handle< std::vector<double> >    sumPztopHandle;
-Handle< std::vector<double> >    sumPzWHandle;
-Handle< std::vector<double> >    sumPzZHandle;
-Handle< std::vector<double> >    sumPzHHandle;
-Handle< std::vector<double> >    sumPzjetHandle;
-Handle< std::vector<double> >    sumPtopHandle;
-Handle< std::vector<double> >    sumPWHandle;
-Handle< std::vector<double> >    sumPZHandle;
-Handle< std::vector<double> >    sumPHHandle;
-Handle< std::vector<double> >    sumPjetHandle;
-Handle< std::vector<double> >    FWmoment1topHandle;
-Handle< std::vector<double> >    FWmoment2topHandle;
-Handle< std::vector<double> >    FWmoment3topHandle;
-Handle< std::vector<double> >    FWmoment4topHandle;
-Handle< std::vector<double> >    isotropytopHandle;
-Handle< std::vector<double> >    sphericitytopHandle;
-Handle< std::vector<double> >    aplanaritytopHandle;
-Handle< std::vector<double> >    thrusttopHandle;
-Handle< std::vector<double> >    FWmoment1WHandle;
-Handle< std::vector<double> >    FWmoment2WHandle;
-Handle< std::vector<double> >    FWmoment3WHandle;
-Handle< std::vector<double> >    FWmoment4WHandle;
-Handle< std::vector<double> >    isotropyWHandle;
-Handle< std::vector<double> >    sphericityWHandle;
-Handle< std::vector<double> >    aplanarityWHandle;
-Handle< std::vector<double> >    thrustWHandle;
-Handle< std::vector<double> >    FWmoment1ZHandle;
-Handle< std::vector<double> >    FWmoment2ZHandle;
-Handle< std::vector<double> >    FWmoment3ZHandle;
-Handle< std::vector<double> >    FWmoment4ZHandle;
-Handle< std::vector<double> >    isotropyZHandle;
-Handle< std::vector<double> >    sphericityZHandle;
-Handle< std::vector<double> >    aplanarityZHandle;
-Handle< std::vector<double> >    thrustZHandle;
-Handle< std::vector<double> >    FWmoment1HHandle;
-Handle< std::vector<double> >    FWmoment2HHandle;
-Handle< std::vector<double> >    FWmoment3HHandle;
-Handle< std::vector<double> >    FWmoment4HHandle;
-Handle< std::vector<double> >    isotropyHHandle;
-Handle< std::vector<double> >    sphericityHHandle;
-Handle< std::vector<double> >    aplanarityHHandle;
-Handle< std::vector<double> >    thrustHHandle;
-Handle< std::vector<double> >    etHandle;
-Handle< std::vector<double> >    etaHandle;
-Handle< std::vector<double> >    massHandle;
-Handle< std::vector<double> >    SDmassHandle;
-Handle< std::vector<double> >    tau32Handle;
-Handle< std::vector<double> >    tau21Handle;
+Handle< std::vector<float> >    fwm0Handle;
+Handle< std::vector<float> >    fwm1Handle;
+Handle< std::vector<float> >    fwm2Handle;
+Handle< std::vector<float> >    fwm3Handle;
+Handle< std::vector<float> >    fwm4Handle;
+Handle< std::vector<float> >    NjetstopHandle;
+Handle< std::vector<float> >    NjetsWHandle;
+Handle< std::vector<float> >    NjetsZHandle;
+Handle< std::vector<float> >    NjetsHHandle;
+Handle< std::vector<float> >    NjetsjetHandle;
+Handle< std::vector<float> >    sumPztopHandle;
+Handle< std::vector<float> >    sumPzWHandle;
+Handle< std::vector<float> >    sumPzZHandle;
+Handle< std::vector<float> >    sumPzHHandle;
+Handle< std::vector<float> >    sumPzjetHandle;
+Handle< std::vector<float> >    sumPtopHandle;
+Handle< std::vector<float> >    sumPWHandle;
+Handle< std::vector<float> >    sumPZHandle;
+Handle< std::vector<float> >    sumPHHandle;
+Handle< std::vector<float> >    sumPjetHandle;
+Handle< std::vector<float> >    FWmoment1topHandle;
+Handle< std::vector<float> >    FWmoment2topHandle;
+Handle< std::vector<float> >    FWmoment3topHandle;
+Handle< std::vector<float> >    FWmoment4topHandle;
+Handle< std::vector<float> >    isotropytopHandle;
+Handle< std::vector<float> >    sphericitytopHandle;
+Handle< std::vector<float> >    aplanaritytopHandle;
+Handle< std::vector<float> >    thrusttopHandle;
+Handle< std::vector<float> >    FWmoment1WHandle;
+Handle< std::vector<float> >    FWmoment2WHandle;
+Handle< std::vector<float> >    FWmoment3WHandle;
+Handle< std::vector<float> >    FWmoment4WHandle;
+Handle< std::vector<float> >    isotropyWHandle;
+Handle< std::vector<float> >    sphericityWHandle;
+Handle< std::vector<float> >    aplanarityWHandle;
+Handle< std::vector<float> >    thrustWHandle;
+Handle< std::vector<float> >    FWmoment1ZHandle;
+Handle< std::vector<float> >    FWmoment2ZHandle;
+Handle< std::vector<float> >    FWmoment3ZHandle;
+Handle< std::vector<float> >    FWmoment4ZHandle;
+Handle< std::vector<float> >    isotropyZHandle;
+Handle< std::vector<float> >    sphericityZHandle;
+Handle< std::vector<float> >    aplanarityZHandle;
+Handle< std::vector<float> >    thrustZHandle;
+Handle< std::vector<float> >    FWmoment1HHandle;
+Handle< std::vector<float> >    FWmoment2HHandle;
+Handle< std::vector<float> >    FWmoment3HHandle;
+Handle< std::vector<float> >    FWmoment4HHandle;
+Handle< std::vector<float> >    isotropyHHandle;
+Handle< std::vector<float> >    sphericityHHandle;
+Handle< std::vector<float> >    aplanarityHHandle;
+Handle< std::vector<float> >    thrustHHandle;
+Handle< std::vector<float> >    etHandle;
+Handle< std::vector<float> >    etaHandle;
+Handle< std::vector<float> >    massHandle;
+Handle< std::vector<float> >    SDmassHandle;
+Handle< std::vector<float> >    tau32Handle;
+Handle< std::vector<float> >    tau21Handle;
+Handle< std::vector<float> >    bDiscHandle;
+Handle< std::vector<int> > vertHandle;
+Handle< std::vector<int> > decayModeHandle;
+Handle< std::vector<int> > nak4JetsHandle;
+Handle< std::vector<pat::Jet> > savedJetsHandle;
 
 iEvent.getByToken(   fwm0Token_, fwm0Handle );
 iEvent.getByToken(   fwm1Token_, fwm1Handle );
@@ -551,125 +654,194 @@ iEvent.getByToken(   massToken_, massHandle);
 iEvent.getByToken(   SDmassToken_, SDmassHandle);
 iEvent.getByToken(   tau32Token_, tau32Handle);
 iEvent.getByToken(   tau21Token_, tau21Handle);
+iEvent.getByToken(   bDiscToken_, bDiscHandle);
+iEvent.getByToken(   vertToken_, vertHandle);
+iEvent.getByToken(   decayModeToken_, decayModeHandle);
+iEvent.getByToken(   nak4JetsToken_, nak4JetsHandle);
+iEvent.getByToken(   savedJetsToken_, savedJetsHandle);
 
+if (etHandle->size() < 2) return;
 
-cout << etHandle->size() << endl;
-double NNout1, NNout2, NNout3, NNout4;
+eventVars["Njets"] = etHandle->size();
+eventVars["NjetsAK4"] = nak4JetsHandle->at(0);
+eventVars["nPV"] = vertHandle->at(0);
+
+std::vector<float> NNout1, NNout2, NNout3, NNout4, NNout5;
+int nTop = 0;
+int nW = 0;
+int nZ = 0;
+int nH = 0;
+int nQCD = 0;
+
+NNout1vals.clear();
+NNout2vals.clear();
+NNout3vals.clear();
+NNout4vals.clear();
+NNout5vals.clear();
+etvals.clear();
+etavals.clear();
+phivals.clear();
+massvals.clear();
+sdmassvals.clear();
+decayModevals.clear();
+
+for (size_t i = 0; i < decayModeHandle->size(); i++){
+
+	decayModevals.push_back( decayModeHandle->at(i) );
+}
+
+float ak8_ht = 0.00;
+
 
 for (size_t i = 0; i < etHandle->size(); i++){
 
+    ak8_ht += etHandle->at(i);
+    pat::Jet thisJet = savedJetsHandle->at(i); 
 
-    treeVars["PzOverP_top"]       = float ( sumPztopHandle->at(i) / (sumPtopHandle->at(i) + 0.0001) );
-    treeVars["PzOverP_Z"]         = float ( sumPzZHandle->at(i) / (sumPZHandle->at(i) + 0.0001) );
-    treeVars["PzOverP_W"]         = float ( sumPzWHandle->at(i) / (sumPWHandle->at(i) + 0.0001) );
-    treeVars["PzOverP_H"]         = float ( sumPzHHandle->at(i) / (sumPHHandle->at(i) + 0.0001) );
-    treeVars["h1_top"]            = float ( FWmoment1topHandle->at(i) );
-    treeVars["h2_top"]            = float ( FWmoment2topHandle->at(i) );
-    treeVars["h3_top"]            = float ( FWmoment3topHandle->at(i) );
-    treeVars["h4_top"]            = float ( FWmoment4topHandle->at(i) );
-    treeVars["isotropy_top"]      = float ( isotropytopHandle->at(i) );
-    treeVars["spericity_top"]     = float ( sphericitytopHandle->at(i) );
-    treeVars["aplanarity_top"]    = float ( aplanaritytopHandle->at(i) );
-    treeVars["aplanarity_top"]    = float ( thrusttopHandle->at(i) );
-    treeVars["h1_W"]              = float ( FWmoment1WHandle->at(i) );
-    treeVars["h2_W"]              = float ( FWmoment2WHandle->at(i) );
-    treeVars["h3_W"]              = float ( FWmoment3WHandle->at(i) );
-    treeVars["h4_W"]              = float ( FWmoment4WHandle->at(i) );
-    treeVars["isotropy_W"]        = float ( isotropyWHandle->at(i) );
-    treeVars["spericity_W"]       = float ( sphericityWHandle->at(i) );
-    treeVars["aplanarity_W"]      = float ( aplanarityWHandle->at(i) );
-    treeVars["aplanarity_W"]      = float ( thrustWHandle->at(i) );
-    treeVars["h1_Z"]              = float ( FWmoment1ZHandle->at(i) );
-    treeVars["h2_Z"]              = float ( FWmoment2ZHandle->at(i) );
-    treeVars["h3_Z"]              = float ( FWmoment3ZHandle->at(i) );
-    treeVars["h4_Z"]              = float ( FWmoment4ZHandle->at(i) );
-    treeVars["isotropy_Z"]        = float ( isotropyZHandle->at(i) );
-    treeVars["spericity_Z"]       = float ( sphericityZHandle->at(i) );
-    treeVars["aplanarity_Z"]      = float ( aplanarityZHandle->at(i) );
-    treeVars["aplanarity_Z"]      = float ( thrustZHandle->at(i) );
-    treeVars["h1_H"]              = float ( FWmoment1HHandle->at(i) );
-    treeVars["h2_H"]              = float ( FWmoment2HHandle->at(i) );
-    treeVars["h3_H"]              = float ( FWmoment3HHandle->at(i) );
-    treeVars["h4_H"]              = float ( FWmoment4HHandle->at(i) );
-    treeVars["isotropy_H"]        = float ( isotropyHHandle->at(i) );
-    treeVars["spericity_H"]       = float ( sphericityHHandle->at(i) );
-    treeVars["aplanarity_H"]      = float ( aplanarityHHandle->at(i) );
-    treeVars["aplanarity_H"]      = float ( thrustHHandle->at(i) );
-    treeVars["et"]                = float ( etHandle->at(i) );
-    treeVars["eta"]               = float ( etaHandle->at(i) );
-    treeVars["SDmass"]            = float ( SDmassHandle->at(i) );
-    treeVars["tau32"]             = float ( tau32Handle->at(i) );
-    treeVars["tau21"]             = float ( tau21Handle->at(i) );
+    if ( etHandle->at(i) < 500) continue;
+    if ( SDmassHandle->at(i) < 40.0) continue;
+
+    treeVars["PzOverP_top"]       =  ( sumPztopHandle->at(i) / (sumPtopHandle->at(i) + 0.0001) );
+    treeVars["PzOverP_Z"]         =  ( sumPzZHandle->at(i) / (sumPZHandle->at(i) + 0.0001) );
+    treeVars["PzOverP_W"]         =  ( sumPzWHandle->at(i) / (sumPWHandle->at(i) + 0.0001) );
+    treeVars["PzOverP_H"]         =  ( sumPzHHandle->at(i) / (sumPHHandle->at(i) + 0.0001) );
+    treeVars["h1_top"]            =  ( FWmoment1topHandle->at(i) );
+    treeVars["h2_top"]            =  ( FWmoment2topHandle->at(i) );
+    treeVars["h3_top"]            =  ( FWmoment3topHandle->at(i) );
+    treeVars["h4_top"]            =  ( FWmoment4topHandle->at(i) );
+    treeVars["isotropy_top"]      =  ( isotropytopHandle->at(i) );
+    treeVars["sphericity_top"]     =  ( sphericitytopHandle->at(i) );
+    treeVars["aplanarity_top"]    =  ( aplanaritytopHandle->at(i) );
+    treeVars["thrust_top"]    =  ( thrusttopHandle->at(i) );
+    treeVars["h1_W"]              =  ( FWmoment1WHandle->at(i) );
+    treeVars["h2_W"]              =  ( FWmoment2WHandle->at(i) );
+    treeVars["h3_W"]              =  ( FWmoment3WHandle->at(i) );
+    treeVars["h4_W"]              =  ( FWmoment4WHandle->at(i) );
+    treeVars["isotropy_W"]        =  ( isotropyWHandle->at(i) );
+    treeVars["sphericity_W"]       =  ( sphericityWHandle->at(i) );
+    treeVars["aplanarity_W"]      =  ( aplanarityWHandle->at(i) );
+    treeVars["thrust_W"]      =  ( thrustWHandle->at(i) );
+    treeVars["h1_Z"]              =  ( FWmoment1ZHandle->at(i) );
+    treeVars["h2_Z"]              =  ( FWmoment2ZHandle->at(i) );
+    treeVars["h3_Z"]              =  ( FWmoment3ZHandle->at(i) );
+    treeVars["h4_Z"]              =  ( FWmoment4ZHandle->at(i) );
+    treeVars["isotropy_Z"]        =  ( isotropyZHandle->at(i) );
+    treeVars["sphericity_Z"]       =  ( sphericityZHandle->at(i) );
+    treeVars["aplanarity_Z"]      =  ( aplanarityZHandle->at(i) );
+    treeVars["thrust_Z"]      =  ( thrustZHandle->at(i) );
+    treeVars["h1_H"]              =  ( FWmoment1HHandle->at(i) );
+    treeVars["h2_H"]              =  ( FWmoment2HHandle->at(i) );
+    treeVars["h3_H"]              =  ( FWmoment3HHandle->at(i) );
+    treeVars["h4_H"]              =  ( FWmoment4HHandle->at(i) );
+    treeVars["isotropy_H"]        =  ( isotropyHHandle->at(i) );
+    treeVars["sphericity_H"]       =  ( sphericityHHandle->at(i) );
+    treeVars["aplanarity_H"]      =  ( aplanarityHHandle->at(i) );
+    treeVars["thrust_H"]      =  ( thrustHHandle->at(i) );
+    treeVars["et"]                =  ( etHandle->at(i) );
+    treeVars["eta"]               =  ( etaHandle->at(i) );
+    treeVars["SDmass"]            =  ( SDmassHandle->at(i) );
+    treeVars["tau32"]             =  ( tau32Handle->at(i) );
+    treeVars["tau21"]             =  ( tau21Handle->at(i) );
     
-
-cout <<     treeVars["PzOverP_top"] <<" " <<
-    treeVars["PzOverP_Z"]         <<" " <<
-    treeVars["PzOverP_W"]        <<" " <<
-    treeVars["PzOverP_H"]        <<" " <<
-    treeVars["h1_top"]          <<" " <<
-    treeVars["h2_top"]            <<" " <<
-    treeVars["h3_top"]            <<" " <<
-    treeVars["h4_top"]            <<" " <<
-    treeVars["isotropy_top"]     <<" " <<
-    treeVars["spericity_top"]      <<" " <<
-    treeVars["aplanarity_top"]     <<" " <<
-    treeVars["aplanarity_top"]    <<" " <<
-    treeVars["h1_W"]              <<" " <<
-    treeVars["h2_W"]              <<" " <<
-    treeVars["h3_W"]              <<" " <<
-    treeVars["h4_W"]              <<" " <<
-    treeVars["isotropy_W"]        <<" " <<
-    treeVars["spericity_W"]       <<" " <<
-    treeVars["aplanarity_W"]      <<" " <<
-    treeVars["aplanarity_W"]      <<" " <<
-    treeVars["h1_Z"]              <<" " <<
-    treeVars["h2_Z"]              <<" " <<
-    treeVars["h3_Z"]              <<" " <<
-    treeVars["h4_Z"]              <<" " <<
-    treeVars["isotropy_Z"]        <<" " <<
-    treeVars["spericity_Z"]       <<" " <<
-    treeVars["aplanarity_Z"]      <<" " <<
-    treeVars["aplanarity_Z"]      <<" " <<
-    treeVars["h1_H"]              <<" " <<
-    treeVars["h2_H"]              <<" " <<
-    treeVars["h3_H"]              <<" " <<
-    treeVars["h4_H"]              <<" " <<
-    treeVars["isotropy_H"]        <<" " <<
-    treeVars["spericity_H"]       <<" " <<
-    treeVars["aplanarity_H"]      <<" " <<
-    treeVars["aplanarity_H"]      <<" " <<
-    treeVars["et"]                <<" " <<
-    treeVars["eta"]               <<" " <<
-    treeVars["SDmass"]            <<" " <<
-    treeVars["tau32"]             <<" " <<
-    treeVars["tau21"]             <<endl;
-
-
 				
-    NNout1 = (reader->EvaluateRegression( "top" ))[0];
-    NNout2 = (reader->EvaluateRegression( "W" ))[0];
-    NNout3 = (reader->EvaluateRegression( "Z" ))[0];
-    NNout4 = (reader->EvaluateRegression( "H" ))[0];
+    NNout1vals.push_back((reader->EvaluateRegression( "fived" ))[0]);
+    NNout2vals.push_back((reader->EvaluateRegression( "fived" ))[1]);
+    NNout3vals.push_back((reader->EvaluateRegression( "fived" ))[2]);
+    NNout4vals.push_back((reader->EvaluateRegression( "fived" ))[3]);
+    NNout5vals.push_back((reader->EvaluateRegression( "fived" ))[4]);
 
-    cout << NNout1 << " " << NNout2 << " " << NNout3 << " " << NNout4 << endl;
+    etvals.push_back( etHandle->at(i));
+    etavals.push_back( thisJet.eta());
+    phivals.push_back( thisJet.phi());
+    massvals.push_back( thisJet.mass());
+    sdmassvals.push_back( SDmassHandle->at(i));
+
+
+
+    float distTo1 = sqrt( (NNout1vals[i] - 1.0)*(NNout1vals[i] - 1.0) + (NNout2vals[i] - 0.0) * (NNout2vals[i] - 0.0) + (NNout3vals[i] - 0.0) * (NNout3vals[i] - 0.0) + (NNout4vals[i] - 0.0) * (NNout4vals[i] - 0.0) + (NNout5vals[i] - 0.0) * (NNout5vals[i] - 0.0)  ) ;
+    float distTo2 = sqrt( (NNout1vals[i] - 0.0)*(NNout1vals[i] - 0.0) + (NNout2vals[i] - 1.0) * (NNout2vals[i] - 1.0) + (NNout3vals[i] - 0.0) * (NNout3vals[i] - 0.0) + (NNout4vals[i] - 0.0) * (NNout4vals[i] - 0.0) + (NNout5vals[i] - 0.0) * (NNout5vals[i] - 0.0)  ) ;
+    float distTo3 = sqrt( (NNout1vals[i] - 0.0)*(NNout1vals[i] - 0.0) + (NNout2vals[i] - 0.0) * (NNout2vals[i] - 0.0) + (NNout3vals[i] - 1.0) * (NNout3vals[i] - 1.0) + (NNout4vals[i] - 0.0) * (NNout4vals[i] - 0.0) + (NNout5vals[i] - 0.0) * (NNout5vals[i] - 0.0)  ) ;
+    float distTo4 = sqrt( (NNout1vals[i] - 0.0)*(NNout1vals[i] - 0.0) + (NNout2vals[i] - 0.0) * (NNout2vals[i] - 0.0) + (NNout3vals[i] - 0.0) * (NNout3vals[i] - 0.0) + (NNout4vals[i] - 1.0) * (NNout4vals[i] - 1.0) + (NNout5vals[i] - 0.0) * (NNout5vals[i] - 0.0)  ) ;
+    float distTo5 = sqrt( (NNout1vals[i] - 0.0)*(NNout1vals[i] - 0.0) + (NNout2vals[i] - 0.0) * (NNout2vals[i] - 0.0) + (NNout3vals[i] - 0.0) * (NNout3vals[i] - 0.0) + (NNout4vals[i] - 0.0) * (NNout4vals[i] - 0.0) + (NNout5vals[i] - 1.0) * (NNout5vals[i] - 1.0)  ) ;
+
+    std::vector<float> a{ distTo1, distTo2, distTo3, distTo4, distTo5};
+    std::vector<float>::iterator result = std::min_element(std::begin(a), std::end(a));
+
+    float particleType = std::distance(std::begin(a), result);
+
+    if (particleType == 0) nQCD++;
+    if (particleType == 1) nTop++;
+    if (particleType == 2) nH++;
+    if (particleType == 3) nZ++;
+    if (particleType == 4) nW++;
 
 }
-
  
 
 
-
-
-
-
-
-
-
-/* this is an EventSetup example
-   //Read SetupData from the SetupRecord in the EventSetup
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
+/*float distTo1_jet0 = sqrt( (NNout1[0] - 1.0)*(NNout1[0] - 1.0) + (NNout2[0] - 0.0) * (NNout2[0] - 0.0) + (NNout3[0] - 0.0) * (NNout3[0] - 0.0) + (NNout4[0] - 0.0) * (NNout4[0] - 0.0) ) ;
+float distTo1_jet1 = sqrt( (NNout1[1] - 1.0)*(NNout1[1] - 1.0) + (NNout2[1] - 0.0) * (NNout2[1] - 0.0) + (NNout3[1] - 0.0) * (NNout3[1] - 0.0) + (NNout4[1] - 0.0) * (NNout4[1] - 0.0) ) ;
+float distTo2_jet0 = sqrt( (NNout1[0] - 0.0)*(NNout1[0] - 0.0) + (NNout2[0] - 1.0) * (NNout2[0] - 1.0) + (NNout3[0] - 0.0) * (NNout3[0] - 0.0) + (NNout4[0] - 0.0) * (NNout4[0] - 0.0) ) ;
+float distTo2_jet1 = sqrt( (NNout1[1] - 0.0)*(NNout1[1] - 0.0) + (NNout2[1] - 1.0) * (NNout2[1] - 1.0) + (NNout3[1] - 0.0) * (NNout3[1] - 0.0) + (NNout4[1] - 0.0) * (NNout4[1] - 0.0) ) ;
+float distTo3_jet0 = sqrt( (NNout1[0] - 0.0)*(NNout1[0] - 0.0) + (NNout2[0] - 0.0) * (NNout2[0] - 0.0) + (NNout3[0] - 1.0) * (NNout3[0] - 1.0) + (NNout4[0] - 0.0) * (NNout4[0] - 0.0) ) ;
+float distTo3_jet1 = sqrt( (NNout1[1] - 0.0)*(NNout1[1] - 0.0) + (NNout2[1] - 0.0) * (NNout2[1] - 0.0) + (NNout3[1] - 1.0) * (NNout3[1] - 1.0) + (NNout4[1] - 0.0) * (NNout4[1] - 0.0) ) ;
+float distTo4_jet0 = sqrt( (NNout1[0] - 0.0)*(NNout1[0] - 0.0) + (NNout2[0] - 0.0) * (NNout2[0] - 0.0) + (NNout3[0] - 0.0) * (NNout3[0] - 0.0) + (NNout4[0] - 1.0) * (NNout4[0] - 1.0) ) ;
+float distTo4_jet1 = sqrt( (NNout1[1] - 0.0)*(NNout1[1] - 0.0) + (NNout2[1] - 0.0) * (NNout2[1] - 0.0) + (NNout3[1] - 0.0) * (NNout3[1] - 0.0) + (NNout4[1] - 1.0) * (NNout4[1] - 1.0) ) ;
 */
+
+
+/*
+eventVars["jet0_distToTop"] = distTo1_jet0;
+eventVars["jet1_distToTop"] = distTo1_jet1;
+eventVars["jet0_SDmass"] = SDmassHandle->at(0);
+eventVars["jet0_tau32"] = tau32Handle->at(0);
+eventVars["jet0_bDisc"] = bDiscHandle->at(0);
+eventVars["jet0_pt"] = etHandle->at(0);
+eventVars["jet0_eta"] = etaHandle->at(0);
+eventVars["jet1_SDmass"] = SDmassHandle->at(1);
+eventVars["jet1_tau32"] = tau32Handle->at(1);
+eventVars["jet1_bDisc"] = bDiscHandle->at(1);
+eventVars["jet1_pt"] = etHandle->at(1);
+eventVars["jet1_eta"] = etaHandle->at(1);
+
+eventVars["jet0_NNout1"] = NNout1[0];
+eventVars["jet0_NNout2"] = NNout2[0];
+eventVars["jet0_NNout3"] = NNout3[0];
+eventVars["jet0_NNout4"] = NNout4[0];
+eventVars["jet0_NNout5"] = NNout5[0];
+eventVars["jet1_NNout1"] = NNout1[1];
+eventVars["jet1_NNout2"] = NNout2[1];
+eventVars["jet1_NNout3"] = NNout3[1];
+eventVars["jet1_NNout4"] = NNout4[1];
+eventVars["jet1_NNout5"] = NNout5[1];
+*/
+
+
+eventVars["numTop"] = nTop;
+eventVars["numW"] = nW;
+eventVars["numZ"] = nZ;
+eventVars["numH"] = nH;
+eventVars["numQCD"] = nQCD;
+eventVars["ht"] = ak8_ht;
+
+
+/*
+pat::Jet patjet0 = savedJetsHandle->at(0);
+TLorentzVector jet0;
+jet0.SetPtEtaPhiM( patjet0.pt(), patjet0.eta(), patjet0.phi(), patjet0.mass() );
+pat::Jet patjet1 = savedJetsHandle->at(1);
+TLorentzVector jet1;
+jet1.SetPtEtaPhiM( patjet1.pt(), patjet1.eta(), patjet1.phi(), patjet1.mass() );
+
+TLorentzVector dijet = jet0 + jet1;
+
+eventVars["mjj"] = dijet.M();
+eventVars["dy"] = jet0.Rapidity() - jet1.Rapidity();
+*/
+
+
+eventTree->Fill();
+
  
 }
 
