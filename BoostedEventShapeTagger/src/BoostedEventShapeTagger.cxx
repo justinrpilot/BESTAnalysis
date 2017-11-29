@@ -77,7 +77,7 @@ BoostedEventShapeTagger::~BoostedEventShapeTagger(){
 std::vector<float> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
     /* Execute TMVA */
     getValues(jet);       // update m_BESTvars
-    m_NNresults = m_reader->EvaluateRegression( "fived" );
+    m_NNresults = m_reader->EvaluateRegression( m_TMVAName );
 
     return m_NNresults;
 }
@@ -85,7 +85,6 @@ std::vector<float> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
 
 void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     /* Grab attributes from the jet and store them in map
-    
        Jet requirements:
          pT > 500 GeV
          soft-drop mass > 40 GeV
