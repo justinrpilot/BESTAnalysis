@@ -91,17 +91,16 @@ Piece | Description
 `TChain *input = new TChain("jetTree");` |  The input tree and file names (everything is added to one chain)
 `factory->SetWeightExpression( "flatten", "Regression" );` |  Apply the weights to flatten et
 `TCut mycut = "et > 500 && et < 3000"`   |  A cut to apply in creating testing/training samples
-`factory->PrepareTrainingAndTestTree( mycut, "nTrain_Regression=100000:nTest_Regression=100000:SplitMode=Random:NormMode=NumEvents:!V" );` |  Define training/testing sizes
+
+Additionally, define the training and testing sizes with `factory->PrepareTrainingAndTestTree( mycut, "nTrain_Regression=100000:nTest_Regression=100000:SplitMode=Random:NormMode=NumEvents:!V" );`.
 
 
 You can reduce the number of training events and input variables to train a small NN quickly to see if things are working.  
 The network is defined by an xml file in `TMVATraining/weights/`  
-**This xml file needs to be used with `runTree.C` to evaluate the NN performance**
+**This xml file needs to be used with `runTree.C` to evaluate the NN performance!**
 
 Once you have a NN xml file, you can re-run `runTree.C` to look at the output distributions in a nice way, 
-make sure you have the correct xml file in there:
-
-See [here](https://github.com/justinrpilot/BESTAnalysis/blob/master/BESTProducer/test/runTree.C#L139).
+make sure you have the correct xml file in there: see [here](https://github.com/justinrpilot/BESTAnalysis/blob/master/BESTProducer/test/runTree.C#L139).
 
 You must have the variables defined in the same order as you did in `TMVARegression.C` for the TMVA::Reader class.
 And make sure `BookMVA()` has the new file name of the xml file from training.
