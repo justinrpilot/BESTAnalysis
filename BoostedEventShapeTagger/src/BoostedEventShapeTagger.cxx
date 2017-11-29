@@ -506,6 +506,17 @@ void BoostedEventShapeTagger::setConfigurations(const std::vector<std::string>& 
         m_configurations.insert( std::pair<std::string,std::string>(tokens.at(0),tokens.at(1)) );
     }
 
+    // Protection against default settings missing in custom configuration
+    // -- map of defaultConfigs defined in header
+    for (const auto& defaultConfig : m_defaultConfigs){
+        if ( m_configurations.find(defaultConfig.first) == m_configurations.end() ){ 
+            // item isn't in config file
+            std::cout << " WARNING :: BEST : Configuration " << defaultConfig.first << " not defined." << std::endl;
+            std::cout << " WARNING :: BEST : Setting value to default value: " << defaultConfig.second << std::endl;
+            m_configurations[defaultConfig.first] = defaultConfig.second;
+        }
+    }
+
     return;
 }
 

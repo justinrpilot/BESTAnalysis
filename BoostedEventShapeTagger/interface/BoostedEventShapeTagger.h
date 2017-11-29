@@ -78,6 +78,16 @@ class BoostedEventShapeTagger {
     float m_Hmass = 125.;       // Higgs mass
     float m_Tmass = 172.5;      // Top mass
 
+    std::map<std::string,std::string> m_defaultConfigs = {
+             {"TMVAName",            "fived"},
+             {"xmlFile",             "BESTAnalysis/BoostedEventShapeTagger/data/TMVARegression_MLP.weights.xml"},
+             {"TMVAVariables",       "Analysis/B2GTTrees/data/BESTvariables.txt"},
+             {"applyKinematicCuts",  "true"},
+             {"radiusSmall",         "0.4"},
+             {"radiusLarge",         "0.8"},
+             {"reclusterJetPtMin",   "30.0"},
+             {"jetSoftDropMassMin",  "40.0"},
+             {"jetPtMin",            "500.0"} };
 };
 
 #endif
