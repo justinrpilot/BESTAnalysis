@@ -44,10 +44,10 @@ class BoostedEventShapeTagger {
     int FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
     float LegP(float x, int order);
 
-    unsigned int getParticleID()
+    unsigned int getParticleID();
 
     void setConfigurations(const std::vector<std::string>& configurations);
-    void read_file( const std::string &file_name, std::vector<std::string> &values, const std::string &comment );
+    void read_file( const std::string &file_name, std::vector<std::string> &values, const std::string &comment="#" );
     bool str2bool( const std::string value );
 
   protected:
@@ -56,7 +56,7 @@ class BoostedEventShapeTagger {
     TMVA::Reader *m_reader;
     std::vector<std::string> m_listOfVars;
     std::map<std::string, float> m_BESTvars;
-    std::vector<float> m_NNresults
+    std::vector<float> m_NNresults;
     std::string m_TMVAName;
     std::string m_xmlFile;
     std::string m_TMVAVariables;

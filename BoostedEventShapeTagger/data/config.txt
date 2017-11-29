@@ -1,6 +1,6 @@
 TMVAName fived
 xmlFile BESTAnalysis/BoostedEventShapeTagger/data/TMVARegression_MLP.weights.xml
-TMVAVariables Analysis/B2GTTrees/data/BESTvariables.txt
+TMVAVariables BESTAnalysis/BoostedEventShapeTagger/data/TMVARegression_MLP.txt
 applyKinematicCuts true
 radiusSmall 0.4
 radiusLarge 0.8
