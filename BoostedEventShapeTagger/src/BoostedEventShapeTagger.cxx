@@ -472,6 +472,11 @@ float BoostedEventShapeTagger::LegP(float x, int order){
 unsigned int BoostedEventShapeTagger::getParticleID(){
     /* Use simple algorithm to get the predicted particle ID
        - Particle ID = Particle Type closest to score 
+           (particleType == 0) QCD
+           (particleType == 1) Top
+           (particleType == 2) H
+           (particleType == 3) Z
+           (particleType == 4) W
     */
     float qcdScore   = m_NNresults[0];
     float topScore   = m_NNresults[1];
