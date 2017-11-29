@@ -76,7 +76,7 @@ BoostedEventShapeTagger::~BoostedEventShapeTagger(){
 
 std::vector<float> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
     /* Execute TMVA */
-    getValues(jet);       // update m_BESTvars
+    getJetValues(jet);       // update m_BESTvars
     m_NNresults = m_reader->EvaluateRegression( m_TMVAName );
 
     return m_NNresults;
@@ -97,6 +97,7 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
            sumP, sumPz
     */
     using namespace fastjet;
+    typedef reco::Candidate::PolarLorentzVector fourv;
 
     // clear the map from the previous jet's values
     m_BESTvars.clear();
@@ -522,7 +523,7 @@ void BoostedEventShapeTagger::setConfigurations(const std::vector<std::string>& 
 
 void BoostedEventShapeTagger::read_file( const std::string &file_name, std::vector<std::string> &values, const std::string &comment ) {
     /* Read in a generic file and put it into a vector of strings */
-    std::ifstream tmp_name = open_file(file_name);
+    std::ifstream tmp_name(file_name.c_str());
 
     // open the file and put the data into a vector
     std::string line("");
