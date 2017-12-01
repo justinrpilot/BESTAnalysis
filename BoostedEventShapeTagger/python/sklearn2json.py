@@ -226,10 +226,10 @@ if __name__ == '__main__':
     conv.variables_file = results.variables # 'BEST_mlp_variables.json'
 
     # generate variables JSON (add options later, if needed)
-    conv.makeVariablesJSON = False
+    conv.makeVariablesJSON = True
     if conv.makeVariablesJSON:
         conv.listOfVariables   = 'data/BEST_mlp_variables.txt'
-        conv.class_labels  = ["qcd", "top", "w", "z", "higgs"]
+        conv.class_labels  = ["dnn_qcd","dnn_w","dnn_z","dnn_higgs","dnn_top"]
         conv.miscellaneous = {"scikit-learn": "0.18.1"}
 
     # execute the converter!
