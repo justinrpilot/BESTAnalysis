@@ -8,6 +8,7 @@
 <use name="PhysicsTools/CandUtils"/>
 <use name="FWCore/ServiceRegistry"/>
 <use name="roottmva"/>
+<use name="lwtnn/lwtnn"/>
 
 <export>
   <lib   name="1"/>

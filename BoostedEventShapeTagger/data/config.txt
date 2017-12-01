@@ -1,6 +1,4 @@
-TMVAName fived
-xmlFile BESTAnalysis/BoostedEventShapeTagger/data/TMVARegression_MLP.weights.xml
-TMVAVariables BESTAnalysis/BoostedEventShapeTagger/data/TMVARegression_MLP.txt
+dnnFile BESTAnalysis/BoostedEventShapeTagger/data/BEST_mlp.json
 applyKinematicCuts true
 radiusSmall 0.4
 radiusLarge 0.8

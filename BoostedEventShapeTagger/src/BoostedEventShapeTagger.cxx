@@ -24,9 +24,7 @@ Requires MiniAOD inputs to access proper set of information
 
 // constructor
 BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) :
-  m_TMVAName("SetMe"),
-  m_xmlFile("SetMe"),
-  m_TMVAVariables("SetMe"),
+  m_lwtnn(nullptr),
   m_applyKinematicCuts(true),
   m_jetSoftDropMassMin(0),
   m_jetPtMin(0),
@@ -48,36 +46,22 @@ BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) 
     m_radiusLarge        = std::stof(m_configurations.at("radiusLarge"));
     m_reclusterJetPtMin  = std::stof(m_configurations.at("reclusterJetPtMin"));
 
-
-    // TMVA
-    m_TMVAName      = m_configurations.at("TMVAName");
-    m_xmlFile       = m_configurations.at("xmlFile");
-    m_TMVAVariables = m_configurations.at("TMVAVariables");
-
-    m_BESTvars.clear();                        // map to hold variables and their values
-    m_listOfVars.clear();                      // list of variables in NN
-    read_file(m_TMVAVariables,m_listOfVars);   // Read file of variables for TMVA
-
-    m_reader = new TMVA::Reader();             // TMVA object to do NN prediction
-    m_reader->SetVerbose(1);
-    for (const auto& var : m_listOfVars){
-        m_BESTvars[var] = -999.;               // Initialize values in map
-        m_reader->AddVariable( var, &m_BESTvars[var] );
-    }
-
-    m_reader->BookMVA(m_TMVAName,m_xmlFile);
+    // DNN material lwtnn interface
+    std::ifstream input_cfg( m_configurations.at("dnnFile") ); // original: "data/BEST_mlp.json"
+    lwt::JSONConfig cfg = lwt::parse_json( input_cfg );
+    m_lwtnn = new lwt::LightweightNeuralNetwork(cfg.inputs, cfg.layers, cfg.outputs);
 } // end constructor
 
 
 BoostedEventShapeTagger::~BoostedEventShapeTagger(){
-    delete m_reader;
+    delete m_lwtnn;
 }
 
 
-std::vector<float> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
-    /* Execute TMVA */
+std::map<std::string,float> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
+    /* Dan Guest's lightweight DNN framework */
     getJetValues(jet);       // update m_BESTvars
-    m_NNresults = m_reader->EvaluateRegression( m_TMVAName );
+    m_NNresults = m_lwtnn->compute(m_BESTvars);
 
     return m_NNresults;
 }
@@ -408,7 +392,7 @@ void BoostedEventShapeTagger::pboost( TVector3 pbeam, TVector3 plab, TLorentzVec
 }
 
 
-int BoostedEventShapeTagger::FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] ){
+void BoostedEventShapeTagger::FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] ){
     /* Fox-Wolfram moments */
     int numParticles = particles.size();
 
@@ -450,7 +434,7 @@ int BoostedEventShapeTagger::FWMoments( std::vector<TLorentzVector> particles, d
     outputs[3] = (H3 / H0);
     outputs[4] = (H4 / H0);
 
-    return 0;
+    return;
 }
 
 
@@ -471,29 +455,27 @@ float BoostedEventShapeTagger::LegP(float x, int order){
 
 unsigned int BoostedEventShapeTagger::getParticleID(){
     /* Use simple algorithm to get the predicted particle ID
-       - Particle ID = Particle Type closest to score 
+       - Particle ID = Particle Type with largest score 
            (particleType == 0) QCD
            (particleType == 1) Top
            (particleType == 2) H
            (particleType == 3) Z
            (particleType == 4) W
+
+        Here you can also add more sophisticated algorithms for determining the tagging,
+        e.g., define working points to "tag" a jet.
     */
-    float qcdScore   = m_NNresults[0];
-    float topScore   = m_NNresults[1];
-    float higgsScore = m_NNresults[2];
-    float wScore     = m_NNresults[3];
-    float zScore     = m_NNresults[4];
+    std::vector<float> values{ m_NNresults["dnn_qcd"],   m_NNresults["dnn_top"], 
+                               m_NNresults["dnn_higgs"], m_NNresults["dnn_z"], m_NNresults["dnn_w"] };
 
-    float distToQCD   = std::sqrt( pow(qcdScore-1.0,2) + pow(topScore,2)     + pow(higgsScore,2)     + pow(wScore,2)     + pow(zScore,2)  );
-    float distToTOP   = std::sqrt( pow(qcdScore,2)     + pow(topScore-1.0,2) + pow(higgsScore,2)     + pow(wScore,2)     + pow(zScore,2)  );
-    float distToHIGGS = std::sqrt( pow(qcdScore,2)     + pow(topScore,2)     + pow(higgsScore-1.0,2) + pow(wScore,2)     + pow(zScore,2)  );
-    float distToW     = std::sqrt( pow(qcdScore,2)     + pow(topScore,2)     + pow(higgsScore,2)     + pow(wScore-1.0,2) + pow(zScore,2)  );
-    float distToZ     = std::sqrt( pow(qcdScore,2)     + pow(topScore,2)     + pow(higgsScore,2)     + pow(wScore,2)     + pow(zScore-1.0,2));
-
-    std::vector<float> dists{ distToQCD, distToTOP, distToHIGGS, distToW, distToZ};
-    std::vector<float>::iterator result = std::min_element(std::begin(dists), std::end(dists));
-
-    unsigned int particleID = std::distance(std::begin(dists), result);
+    unsigned int particleID(0);
+    float max_value(-1.0);
+    for (unsigned int pid=0,size=values.size();pid<size;pid++){
+        if (values.at(pid) > max_value){
+            max_value  = values.at(pid);
+            particleID = pid;
+        }
+    }
 
     return particleID;
 }

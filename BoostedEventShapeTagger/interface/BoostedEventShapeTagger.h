@@ -22,10 +22,12 @@
 
 // ROOT
 #include "TLorentzRotation.h"
-#include "TMVA/Reader.h"
-#include "TMVA/Tools.h"
 #include "TLorentzVector.h"
 #include "TFile.h"
+
+// lwtnn
+#include "lwtnn/lwtnn/interface/LightweightNeuralNetwork.hh"
+#include "lwtnn/lwtnn/interface/parse_json.hh"
 
 
 // BoostedEventShapeTagger Class
@@ -39,27 +41,27 @@ class BoostedEventShapeTagger {
     std::vector<float> execute( const pat::Jet& jet );
 
     void getJetValues( const pat::Jet& jet );
+
     void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );
 
-    int FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
+    void FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
+
     float LegP(float x, int order);
 
     unsigned int getParticleID();
 
     void setConfigurations(const std::vector<std::string>& configurations);
+
     void read_file( const std::string &file_name, std::vector<std::string> &values, const std::string &comment="#" );
+
     bool str2bool( const std::string value );
 
   protected:
 
-    // TMVA
-    TMVA::Reader *m_reader;
-    std::vector<std::string> m_listOfVars;
+    // lwtnn
+    lwt::LightweightNeuralNetwork* m_lwnn;
     std::map<std::string, float> m_BESTvars;
-    std::vector<float> m_NNresults;
-    std::string m_TMVAName;
-    std::string m_xmlFile;
-    std::string m_TMVAVariables;
+    std::map<std::string, float> m_NNresults;
 
     std::map<std::string,std::string> m_configurations; // map of configurations
 
@@ -79,9 +81,7 @@ class BoostedEventShapeTagger {
     float m_Tmass = 172.5;      // Top mass
 
     std::map<std::string,std::string> m_defaultConfigs = {
-             {"TMVAName",            "fived"},
-             {"xmlFile",             "BESTAnalysis/BoostedEventShapeTagger/data/TMVARegression_MLP.weights.xml"},
-             {"TMVAVariables",       "Analysis/B2GTTrees/data/BESTvariables.txt"},
+             {"dnnFile",             "BESTAnalysis/BoostedEventShapeTagger/data/BEST_mlp.json"},
              {"applyKinematicCuts",  "true"},
              {"radiusSmall",         "0.4"},
              {"radiusLarge",         "0.8"},
