@@ -26,8 +26,8 @@
 #include "TFile.h"
 
 // lwtnn
-#include "lwtnn/lwtnn/interface/LightweightNeuralNetwork.hh"
-#include "lwtnn/lwtnn/interface/parse_json.hh"
+#include "diHiggs/lwtnn/interface/LightweightNeuralNetwork.hh"
+#include "diHiggs/lwtnn/interface/parse_json.hh"
 
 
 // BoostedEventShapeTagger Class
@@ -38,7 +38,7 @@ class BoostedEventShapeTagger {
     BoostedEventShapeTagger(const std::string& configFile);
     ~BoostedEventShapeTagger();
 
-    std::vector<float> execute( const pat::Jet& jet );
+    std::map<std::string,double> execute( const pat::Jet& jet );
 
     void getJetValues( const pat::Jet& jet );
 
@@ -59,9 +59,9 @@ class BoostedEventShapeTagger {
   protected:
 
     // lwtnn
-    lwt::LightweightNeuralNetwork* m_lwnn;
-    std::map<std::string, float> m_BESTvars;
-    std::map<std::string, float> m_NNresults;
+    lwt::LightweightNeuralNetwork* m_lwtnn;
+    std::map<std::string,double> m_BESTvars;
+    std::map<std::string,double> m_NNresults;
 
     std::map<std::string,std::string> m_configurations; // map of configurations
 

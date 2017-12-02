@@ -47,18 +47,17 @@ BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) 
     m_reclusterJetPtMin  = std::stof(m_configurations.at("reclusterJetPtMin"));
 
     // DNN material lwtnn interface
-    std::ifstream input_cfg( m_configurations.at("dnnFile") ); // original: "data/BEST_mlp.json"
+    std::string dnnFile = m_configurations.at("dnnFile");
+    std::ifstream input_cfg( dnnFile );                     // original: "data/BEST_mlp.json"
     lwt::JSONConfig cfg = lwt::parse_json( input_cfg );
     m_lwtnn = new lwt::LightweightNeuralNetwork(cfg.inputs, cfg.layers, cfg.outputs);
 } // end constructor
 
 
-BoostedEventShapeTagger::~BoostedEventShapeTagger(){
-    delete m_lwtnn;
-}
+BoostedEventShapeTagger::~BoostedEventShapeTagger(){}
 
 
-std::map<std::string,float> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
+std::map<std::string,double> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
     /* Dan Guest's lightweight DNN framework */
     getJetValues(jet);       // update m_BESTvars
     m_NNresults = m_lwtnn->compute(m_BESTvars);
@@ -295,6 +294,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
 
     // Update the map with new values
     m_BESTvars["bDisc"]   = (btagValue1 > btagValue2) ? btagValue1 : btagValue2;
+    m_BESTvars["bDisc1"]  = btagValue1;
+    m_BESTvars["bDisc2"]  = btagValue2;
     m_BESTvars["et"]      = thisJet.Pt();
     m_BESTvars["eta"]     = thisJet.Rapidity();
     m_BESTvars["mass"]    = thisJet.M();
@@ -309,7 +310,7 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
 
         m_BESTvars["sumPz_"+jetName]   = sumPz[pp];
         m_BESTvars["sumP_"+jetName]    = sumP[pp];
-        m_BESTvars["PzOverP_"+jetName] =  ( sumPz[pp] / (sumP[pp] + 0.0001) ); // not used for 'jet'
+        m_BESTvars["pzOverp_"+jetName] =  ( sumPz[pp] / (sumP[pp] + 0.0001) ); // not used for 'jet'
     }
 
     m_BESTvars["Njets_top"]  = jetsFJ.size();
@@ -320,44 +321,44 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     m_BESTvars["Njets_orig"] = jetsFJ_noBoost.size();
 
     // -- top values
-    m_BESTvars["h1_top"] = fwm_top[1];
-    m_BESTvars["h2_top"] = fwm_top[2];
-    m_BESTvars["h3_top"] = fwm_top[3];
-    m_BESTvars["h4_top"] = fwm_top[4];
-    m_BESTvars["isotropy_top"]   = eventShapes_top.isotropy(); 
-    m_BESTvars["sphericity_top"] = eventShapes_top.sphericity(2);
-    m_BESTvars["aplanarity_top"] = eventShapes_top.aplanarity(2);
-    m_BESTvars["thrust_top"]     = thrustCalculator_top.thrust();
+    m_BESTvars["FWmoment1top"] = fwm_top[1];
+    m_BESTvars["FWmoment2top"] = fwm_top[2];
+    m_BESTvars["FWmoment3top"] = fwm_top[3];
+    m_BESTvars["FWmoment4top"] = fwm_top[4];
+    m_BESTvars["isotropytop"]   = eventShapes_top.isotropy(); 
+    m_BESTvars["sphericitytop"] = eventShapes_top.sphericity(2);
+    m_BESTvars["aplanaritytop"] = eventShapes_top.aplanarity(2);
+    m_BESTvars["thrusttop"]     = thrustCalculator_top.thrust();
 
     // -- W values
-    m_BESTvars["h1_W"] = fwm_W[1];
-    m_BESTvars["h2_W"] = fwm_W[2];
-    m_BESTvars["h3_W"] = fwm_W[3];
-    m_BESTvars["h4_W"] = fwm_W[4];
-    m_BESTvars["isotropy_W"]   = eventShapes_W.isotropy(); 
-    m_BESTvars["sphericity_W"] = eventShapes_W.sphericity(2);
-    m_BESTvars["aplanarity_W"] = eventShapes_W.aplanarity(2);
-    m_BESTvars["thrust_W"]     = thrustCalculator_W.thrust();
+    m_BESTvars["FWmoment1W"] = fwm_W[1];
+    m_BESTvars["FWmoment2W"] = fwm_W[2];
+    m_BESTvars["FWmoment3W"] = fwm_W[3];
+    m_BESTvars["FWmoment4W"] = fwm_W[4];
+    m_BESTvars["isotropyW"]   = eventShapes_W.isotropy(); 
+    m_BESTvars["sphericityW"] = eventShapes_W.sphericity(2);
+    m_BESTvars["aplanarityW"] = eventShapes_W.aplanarity(2);
+    m_BESTvars["thrustW"]     = thrustCalculator_W.thrust();
 
     // -- Z values
-    m_BESTvars["h1_Z"] = fwm_Z[1];
-    m_BESTvars["h2_Z"] = fwm_Z[2];
-    m_BESTvars["h3_Z"] = fwm_Z[3];
-    m_BESTvars["h4_Z"] = fwm_Z[4];
-    m_BESTvars["isotropy_Z"]   = eventShapes_Z.isotropy(); 
-    m_BESTvars["sphericity_Z"] = eventShapes_Z.sphericity(2);
-    m_BESTvars["aplanarity_Z"] = eventShapes_Z.aplanarity(2);
-    m_BESTvars["thrust_Z"]     = thrustCalculator_Z.thrust();
+    m_BESTvars["FWmoment1Z"] = fwm_Z[1];
+    m_BESTvars["FWmoment2Z"] = fwm_Z[2];
+    m_BESTvars["FWmoment3Z"] = fwm_Z[3];
+    m_BESTvars["FWmoment4Z"] = fwm_Z[4];
+    m_BESTvars["isotropyZ"]   = eventShapes_Z.isotropy(); 
+    m_BESTvars["sphericityZ"] = eventShapes_Z.sphericity(2);
+    m_BESTvars["aplanarityZ"] = eventShapes_Z.aplanarity(2);
+    m_BESTvars["thrustZ"]     = thrustCalculator_Z.thrust();
 
     // -- H values
-    m_BESTvars["h1_H"] = fwm_H[1];
-    m_BESTvars["h2_H"] = fwm_H[2];
-    m_BESTvars["h3_H"] = fwm_H[3];
-    m_BESTvars["h4_H"] = fwm_H[4];
-    m_BESTvars["isotropy_H"]   = eventShapes_H.isotropy(); 
-    m_BESTvars["sphericity_H"] = eventShapes_H.sphericity(2);
-    m_BESTvars["aplanarity_H"] = eventShapes_H.aplanarity(2);
-    m_BESTvars["thrust_H"]     = thrustCalculator_H.thrust();
+    m_BESTvars["FWmoment1H"] = fwm_H[1];
+    m_BESTvars["FWmoment2H"] = fwm_H[2];
+    m_BESTvars["FWmoment3H"] = fwm_H[3];
+    m_BESTvars["FWmoment4H"] = fwm_H[4];
+    m_BESTvars["isotropyH"]   = eventShapes_H.isotropy(); 
+    m_BESTvars["sphericityH"] = eventShapes_H.sphericity(2);
+    m_BESTvars["aplanarityH"] = eventShapes_H.aplanarity(2);
+    m_BESTvars["thrustH"]     = thrustCalculator_H.thrust();
 
     return;
 }
@@ -465,11 +466,11 @@ unsigned int BoostedEventShapeTagger::getParticleID(){
         Here you can also add more sophisticated algorithms for determining the tagging,
         e.g., define working points to "tag" a jet.
     */
-    std::vector<float> values{ m_NNresults["dnn_qcd"],   m_NNresults["dnn_top"], 
+    std::vector<double> values{ m_NNresults["dnn_qcd"],   m_NNresults["dnn_top"], 
                                m_NNresults["dnn_higgs"], m_NNresults["dnn_z"], m_NNresults["dnn_w"] };
 
     unsigned int particleID(0);
-    float max_value(-1.0);
+    double max_value(-1.0);
     for (unsigned int pid=0,size=values.size();pid<size;pid++){
         if (values.at(pid) > max_value){
             max_value  = values.at(pid);
