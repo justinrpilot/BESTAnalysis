@@ -75,6 +75,9 @@ class BoostedEventShapeTagger {
     float m_radiusLarge;        // re-clustering jets
     float m_reclusterJetPtMin;  // [GeV] re-clustering jet pT minimum
 
+    float m_jetChargeKappa;     // weight for jet charge pT
+    size_t m_maxJetSize;        // number of jets in re-clustering
+
     float m_Wmass = 80.4;       // W mass [GeV]
     float m_Zmass = 91.2;       // Z mass
     float m_Hmass = 125.;       // Higgs mass
@@ -87,7 +90,9 @@ class BoostedEventShapeTagger {
              {"radiusLarge",         "0.8"},
              {"reclusterJetPtMin",   "30.0"},
              {"jetSoftDropMassMin",  "40.0"},
-             {"jetPtMin",            "500.0"} };
+             {"jetPtMin",            "500.0"},
+             {"jetChargeKappa",      "0.6"},
+             {"maxJetSize",          "4"} };
 };
 
 #endif

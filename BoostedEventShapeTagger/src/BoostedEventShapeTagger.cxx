@@ -30,7 +30,9 @@ BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) 
   m_jetPtMin(0),
   m_radiusSmall(0),
   m_radiusLarge(0),
-  m_reclusterJetPtMin(0){
+  m_reclusterJetPtMin(0),
+  m_jetChargeKappa(0),
+  m_maxJetSize(0){
     // Configuration
     std::vector<std::string> configurations;
     read_file(configFile,configurations);
@@ -45,6 +47,9 @@ BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) 
     m_radiusSmall        = std::stof(m_configurations.at("radiusSmall"));
     m_radiusLarge        = std::stof(m_configurations.at("radiusLarge"));
     m_reclusterJetPtMin  = std::stof(m_configurations.at("reclusterJetPtMin"));
+
+    m_jetChargeKappa     = std::stof(m_configurations.at("jetChargeKappa"));
+    m_maxJetSize         = std::stoi(m_configurations.at("maxJetSize"));
 
     // DNN material lwtnn interface
     std::string dnnFile = m_configurations.at("dnnFile");
@@ -78,6 +83,7 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
            transformed jets uses 10 GeV
          maxJets = 4
            sumP, sumPz
+           pair-wise invariant mass
     */
     using namespace fastjet;
     typedef reco::Candidate::PolarLorentzVector fourv;
@@ -148,14 +154,36 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     std::vector<fastjet::PseudoJet> jetFJparticles;
     std::vector<fastjet::PseudoJet> jetFJparticles_noBoost;
     std::vector<fastjet::PseudoJet> jetFJparticles_transformed;
-    
+
     TVector3 transformedV;
 
-    // loop over daughters
-    auto daus(jet.daughterPtrVector());   // load the daughters
-    for (unsigned int ida=0, n=daus.size(); ida<n && ida<=3; ++ida) {
+    // Jet charge calculation (from daughters)
+    float qxptsum(0.0);                            // jet charge
+    float ptsum = pow(jet.pt(), m_jetChargeKappa); // weighted jet pT
 
-        auto daughter = daus.at(ida);
+    // loop over daughters
+    auto daus(jet.daughterPtrVector());            // load the daughters
+    auto daughter0 = daus.at(0);                   // First soft drop constituent
+    auto daughter1 = daus.at(1);                   // Second soft drop constituent
+    std::vector<reco::Candidate*> daughtersOfJet;  // store all daughters in one vector
+
+    // access daughters of the first soft drop constituent
+    for (unsigned int i=0,size=daughter0->numberOfDaughters(); i<size; i++){
+        daughtersOfJet.push_back( (reco::Candidate *) daughter0->daughter(i) );
+    }
+    // access daughters of the second soft drop constituent
+    for (unsigned int i=0,size=daughter1->numberOfDaughters(); i<size; i++){
+        daughtersOfJet.push_back( (reco::Candidate *) daughter1->daughter(i));
+    }
+
+    // access remaining daughters not retained by in soft drop
+    for (unsigned int i=2,size=daus.size(); i<size; i++){
+        daughtersOfJet.push_back( (reco::Candidate *) daus.at(i) );
+    }
+
+    for(unsigned int i=0,size=daughtersOfJet.size(); i<size; i++){
+
+        auto daughter = daughtersOfJet.at(i);
 
         if (daughter->pt() < 0.05) continue;
 
@@ -170,12 +198,16 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
         TLorentzVector thisParticleLV_Z(   dau_px,dau_py,dau_pz,dau_e );
         TLorentzVector thisParticleLV_H(   dau_px,dau_py,dau_pz,dau_e );
 
+        if (daughter->pt() > 1.0)
+            qxptsum += daughter->charge() * pow( daughter->pt(), m_jetChargeKappa);
+
+
         topFJparticles_noBoost.push_back( PseudoJet( thisParticleLV_top.X(), thisParticleLV_top.Y(), thisParticleLV_top.Z(), thisParticleLV_top.T() ) );
         jetFJparticles_noBoost.push_back( PseudoJet( thisParticleLV_jet.X(), thisParticleLV_jet.Y(), thisParticleLV_jet.Z(), thisParticleLV_jet.T() ) );
 
         TLorentzVector thisParticleLV_transformed( transformedV.X(), transformedV.Y(), transformedV.Z(), thisParticleLV_jet.E() );
 
-        jetFJparticles_transformed.push_back( PseudoJet( thisParticleLV_transformed.X(), thisParticleLV_transformed.Y(), thisParticleLV_transformed.Z(), thisParticleLV_transformed.T() ) );    
+        jetFJparticles_transformed.push_back( PseudoJet( thisParticleLV_transformed.X(), thisParticleLV_transformed.Y(), thisParticleLV_transformed.Z(), thisParticleLV_transformed.T() ) );
 
         thisParticleLV_jet.Boost( -thisJetLV.BoostVector() );
         thisParticleLV_Z.Boost(   -thisJetLV_Z.BoostVector() );
@@ -209,6 +241,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
         particles2_H.push_back(   math::XYZVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z() ));
         particles3_H.push_back(   reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z(), thisParticleLV_H.T()     ) ));
     } // end loop over daughters
+
+    float jetq = qxptsum / ptsum;  // Jet Charge
 
     // Fox-Wolfram Moments
     double fwm[5]     = {0.0, 0.0 ,0.0 ,0.0, 0.0};
@@ -256,39 +290,144 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     std::vector<PseudoJet> jetsFJ_noBoost     = cs_noBoost.inclusive_jets(m_reclusterJetPtMin);
     std::vector<PseudoJet> jetsFJ_transformed = cs_transformed.inclusive_jets(10.0);
 
+
+    // pair-wise invariant masses
+    TLorentzVector m1234LV_jet(0.,0.,0.,0.);
+    TLorentzVector m1234LV_W(0.,0.,0.,0.);
+    TLorentzVector m1234LV_Z(0.,0.,0.,0.);
+    TLorentzVector m1234LV_H(0.,0.,0.,0.);
+    TLorentzVector m1234LV_top(0.,0.,0.,0.);
+
+    TLorentzVector m12LV_jet(0.,0.,0.,0.);
+    TLorentzVector m12LV_W(0.,0.,0.,0.);
+    TLorentzVector m12LV_Z(0.,0.,0.,0.);
+    TLorentzVector m12LV_H(0.,0.,0.,0.);
+    TLorentzVector m12LV_top(0.,0.,0.,0.);
+
+    TLorentzVector m13LV_jet(0.,0.,0.,0.);
+    TLorentzVector m13LV_W(0.,0.,0.,0.);
+    TLorentzVector m13LV_Z(0.,0.,0.,0.);
+    TLorentzVector m13LV_H(0.,0.,0.,0.);
+    TLorentzVector m13LV_top(0.,0.,0.,0.);
+
+    TLorentzVector m23LV_jet(0.,0.,0.,0.);
+    TLorentzVector m23LV_W(0.,0.,0.,0.);
+    TLorentzVector m23LV_Z(0.,0.,0.,0.);
+    TLorentzVector m23LV_H(0.,0.,0.,0.);
+    TLorentzVector m23LV_top(0.,0.,0.,0.);
+
     // sum of jet pz and p  Indices = top, W, Z, H, j
-    float sumP[5]  = {0.0};
-    float sumPz[5] = {0.0};
-    size_t maxJets = 4;
+    float sumP[5]  = {0.0,0.0,0.0,0.0,0.0};
+    float sumPz[5] = {0.0,0.0,0.0,0.0,0.0};
 
     // -- top
-    for (size_t ii=0,size=std::min(maxJets,jetsFJ.size()); ii<size; ii++){
+    for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ.size()); ii<size; ii++){
         sumPz[0] += jetsFJ[ii].pz();
         sumP[0]  += sqrt( jetsFJ[ii].modp2() );
+        thisJetLV    = TLorentzVector(jetsFJ[ii].px(), jetsFJ[ii].py(), jetsFJ[ii].pz(), jetsFJ[ii].e());
+        m1234LV_top += thisJetLV;
+        switch (ii){
+            case 0:
+                m12LV_top += thisJetLV;
+                m13LV_top += thisJetLV;
+                break;
+            case 1:
+                m12LV_top += thisJetLV;
+                m23LV_top += thisJetLV;
+                break;
+            case 2:
+                m13LV_top += thisJetLV;
+                m23LV_top += thisJetLV;
+                break;
+        }
     }
 
     // -- W jets
-    for (size_t ii=0,size=std::min(maxJets,jetsFJ_W.size()); ii<size; ii++){
+    for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ_W.size()); ii<size; ii++){
         sumPz[1] += jetsFJ_W[ii].pz();
         sumP[1]  += sqrt( jetsFJ_W[ii].modp2() );
+		thisJetLV  = TLorentzVector(jetsFJ_W[ii].px(), jetsFJ_W[ii].py(), jetsFJ_W[ii].pz(), jetsFJ_W[ii].e());
+		m1234LV_W += thisJetLV;
+		switch (ii){
+			case 0:
+				m12LV_W += thisJetLV;
+				m13LV_W += thisJetLV;
+				break;
+			case 1:
+				m12LV_W += thisJetLV;
+				m23LV_W += thisJetLV;
+				break;
+			case 2:
+				m13LV_W += thisJetLV;
+				m23LV_W += thisJetLV;
+				break;
+		}
     }
 
     // -- Z jets
-    for (size_t ii=0,size=std::min(maxJets,jetsFJ_Z.size()); ii<size; ii++){
+    for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ_Z.size()); ii<size; ii++){
         sumPz[2] += jetsFJ_Z[ii].pz();
         sumP[2]  += sqrt( jetsFJ_Z[ii].modp2() );
+		thisJetLV  = TLorentzVector(jetsFJ_Z[ii].px(), jetsFJ_Z[ii].py(), jetsFJ_Z[ii].pz(), jetsFJ_Z[ii].e());
+		m1234LV_Z += thisJetLV;
+		switch (ii){
+			case 0:
+				m12LV_Z += thisJetLV;
+				m13LV_Z += thisJetLV;
+				break;
+			case 1:
+				m12LV_Z += thisJetLV;
+				m23LV_Z += thisJetLV;
+				break;
+			case 2:
+				m13LV_Z += thisJetLV;
+				m23LV_Z += thisJetLV;
+				break;
+		}
     }
 
     // -- Higgs jets
-    for (size_t ii=0,size=std::min(maxJets,jetsFJ_H.size()); ii<size; ii++){
+    for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ_H.size()); ii<size; ii++){
         sumPz[3] += jetsFJ_H[ii].pz();
         sumP[3]  += sqrt( jetsFJ_H[ii].modp2() );
+		thisJetLV  = TLorentzVector(jetsFJ_H[ii].px(), jetsFJ_H[ii].py(), jetsFJ_H[ii].pz(), jetsFJ_H[ii].e());
+		m1234LV_H += thisJetLV;
+		switch (ii){
+			case 0:
+				m12LV_H += thisJetLV;
+				m13LV_H += thisJetLV;
+				break;
+			case 1:
+				m12LV_H += thisJetLV;
+				m23LV_H += thisJetLV;
+				break;
+			case 2:
+				m13LV_H += thisJetLV;
+				m23LV_H += thisJetLV;
+				break;
+		}
     }
 
     // -- jets
-    for (size_t ii=0,size=std::min(maxJets,jetsFJ_jet.size()); ii<size; ii++){
+    for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ_jet.size()); ii<size; ii++){
         sumPz[4] += jetsFJ_jet[ii].pz();
         sumP[4]  += sqrt( jetsFJ_jet[ii].modp2() );
+		thisJetLV    = TLorentzVector(jetsFJ_jet[ii].px(), jetsFJ_jet[ii].py(), jetsFJ_jet[ii].pz(), jetsFJ_jet[ii].e());
+		m1234LV_jet += thisJetLV;
+		switch (ii){
+			case 0:
+				m12LV_jet += thisJetLV;
+				m13LV_jet += thisJetLV;
+				break;
+			case 1:
+				m12LV_jet += thisJetLV;
+				m23LV_jet += thisJetLV;
+				break;
+			case 2:
+				m13LV_jet += thisJetLV;
+				m23LV_jet += thisJetLV;
+				break;
+		}
     }
 
 
@@ -300,8 +439,34 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     m_BESTvars["eta"]     = thisJet.Rapidity();
     m_BESTvars["mass"]    = thisJet.M();
     m_BESTvars["SDmass"]  = jet.userFloat("ak8PFJetsCHSSoftDropMass");
-    m_BESTvars["tau32"]   = (tau2 > 1e-8) ? tau3/tau2 : -999.;
-    m_BESTvars["tau21"]   = (tau1 > 1e-8) ? tau2/tau1 : -999.;
+    m_BESTvars["tau32"]   = (tau2 > 1e-8) ? tau3/tau2 : 999.;
+    m_BESTvars["tau21"]   = (tau1 > 1e-8) ? tau2/tau1 : 999.;
+	m_BESTvars["q"]       = jetq;
+
+	m_BESTvars["m1234_jet"] = m1234LV_jet.M();
+	m_BESTvars["m12_jet"]   = m12LV_jet.M();
+	m_BESTvars["m23_jet"]   = m23LV_jet.M();
+	m_BESTvars["m13_jet"]   = m13LV_jet.M();
+
+	m_BESTvars["m1234_top"] = m1234LV_top.M();
+	m_BESTvars["m12_top"]   = m12LV_top.M();
+	m_BESTvars["m23_top"]   = m23LV_top.M();
+	m_BESTvars["m13_top"]   = m13LV_top.M();
+
+	m_BESTvars["m1234_W"] = m1234LV_W.M();
+	m_BESTvars["m12_W"]   = m12LV_W.M();
+	m_BESTvars["m23_W"]   = m23LV_W.M();
+	m_BESTvars["m13_W"]   = m13LV_W.M();
+
+	m_BESTvars["m1234_Z"] = m1234LV_Z.M();
+	m_BESTvars["m12_Z"]   = m12LV_Z.M();
+	m_BESTvars["m23_Z"]   = m23LV_Z.M();
+	m_BESTvars["m13_Z"]   = m13LV_Z.M();
+
+	m_BESTvars["m1234_H"] = m1234LV_H.M();
+	m_BESTvars["m12_H"]   = m12LV_H.M();
+	m_BESTvars["m23_H"]   = m23LV_H.M();
+	m_BESTvars["m13_H"]   = m13LV_H.M();
 
     std::vector<std::string> jetNames = {"top","W","Z","H","jet"};
 
@@ -325,7 +490,7 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     m_BESTvars["FWmoment2top"] = fwm_top[2];
     m_BESTvars["FWmoment3top"] = fwm_top[3];
     m_BESTvars["FWmoment4top"] = fwm_top[4];
-    m_BESTvars["isotropytop"]   = eventShapes_top.isotropy(); 
+    m_BESTvars["isotropytop"]   = eventShapes_top.isotropy();
     m_BESTvars["sphericitytop"] = eventShapes_top.sphericity(2);
     m_BESTvars["aplanaritytop"] = eventShapes_top.aplanarity(2);
     m_BESTvars["thrusttop"]     = thrustCalculator_top.thrust();
@@ -335,7 +500,7 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     m_BESTvars["FWmoment2W"] = fwm_W[2];
     m_BESTvars["FWmoment3W"] = fwm_W[3];
     m_BESTvars["FWmoment4W"] = fwm_W[4];
-    m_BESTvars["isotropyW"]   = eventShapes_W.isotropy(); 
+    m_BESTvars["isotropyW"]   = eventShapes_W.isotropy();
     m_BESTvars["sphericityW"] = eventShapes_W.sphericity(2);
     m_BESTvars["aplanarityW"] = eventShapes_W.aplanarity(2);
     m_BESTvars["thrustW"]     = thrustCalculator_W.thrust();
@@ -345,7 +510,7 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     m_BESTvars["FWmoment2Z"] = fwm_Z[2];
     m_BESTvars["FWmoment3Z"] = fwm_Z[3];
     m_BESTvars["FWmoment4Z"] = fwm_Z[4];
-    m_BESTvars["isotropyZ"]   = eventShapes_Z.isotropy(); 
+    m_BESTvars["isotropyZ"]   = eventShapes_Z.isotropy();
     m_BESTvars["sphericityZ"] = eventShapes_Z.sphericity(2);
     m_BESTvars["aplanarityZ"] = eventShapes_Z.aplanarity(2);
     m_BESTvars["thrustZ"]     = thrustCalculator_Z.thrust();
@@ -355,7 +520,7 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     m_BESTvars["FWmoment2H"] = fwm_H[2];
     m_BESTvars["FWmoment3H"] = fwm_H[3];
     m_BESTvars["FWmoment4H"] = fwm_H[4];
-    m_BESTvars["isotropyH"]   = eventShapes_H.isotropy(); 
+    m_BESTvars["isotropyH"]   = eventShapes_H.isotropy();
     m_BESTvars["sphericityH"] = eventShapes_H.sphericity(2);
     m_BESTvars["aplanarityH"] = eventShapes_H.aplanarity(2);
     m_BESTvars["thrustH"]     = thrustCalculator_H.thrust();
@@ -397,19 +562,19 @@ void BoostedEventShapeTagger::FWMoments( std::vector<TLorentzVector> particles, 
     /* Fox-Wolfram moments */
     int numParticles = particles.size();
 
-    float s = 0.0;
+    float s(0.0);
     for(int i = 0; i < numParticles; i++){
         s += particles[i].E();
     }
 
-    float H0 = 0.0;
-    float H4 = 0.0;
-    float H3 = 0.0;
-    float H2 = 0.0;
-    float H1 = 0.0;
+    float H0(0.0);
+    float H4(0.0);
+    float H3(0.0);
+    float H2(0.0);
+    float H1(0.0);
 
-    for (int i = 0; i < numParticles; i++){
-        for (int j = i; j < numParticles; j++){
+    for (int i=0; i<numParticles; i++){
+        for (int j=i; j<numParticles; j++){
             float costh = ( particles[i].Px() * particles[j].Px() + particles[i].Py() * particles[j].Py() + particles[i].Pz() * particles[j].Pz() ) / ( particles[i].P() * particles[j].P() );
             float w1 = particles[i].P();
             float w2 = particles[j].P();
@@ -456,7 +621,7 @@ float BoostedEventShapeTagger::LegP(float x, int order){
 
 unsigned int BoostedEventShapeTagger::getParticleID(){
     /* Use simple algorithm to get the predicted particle ID
-       - Particle ID = Particle Type with largest score 
+       - Particle ID = Particle Type with largest score
            (particleType == 0) QCD
            (particleType == 1) Top
            (particleType == 2) H
@@ -466,8 +631,8 @@ unsigned int BoostedEventShapeTagger::getParticleID(){
         Here you can also add more sophisticated algorithms for determining the tagging,
         e.g., define working points to "tag" a jet.
     */
-    std::vector<double> values{ m_NNresults["dnn_qcd"],   m_NNresults["dnn_top"], 
-                               m_NNresults["dnn_higgs"], m_NNresults["dnn_z"], m_NNresults["dnn_w"] };
+    std::vector<double> values{ m_NNresults["dnn_qcd"],   m_NNresults["dnn_top"],
+                                m_NNresults["dnn_higgs"], m_NNresults["dnn_z"], m_NNresults["dnn_w"] };
 
     unsigned int particleID(0);
     double max_value(-1.0);
@@ -497,7 +662,7 @@ void BoostedEventShapeTagger::setConfigurations(const std::vector<std::string>& 
     // Protection against default settings missing in custom configuration
     // -- map of defaultConfigs defined in header
     for (const auto& defaultConfig : m_defaultConfigs){
-        if ( m_configurations.find(defaultConfig.first) == m_configurations.end() ){ 
+        if ( m_configurations.find(defaultConfig.first) == m_configurations.end() ){
             // item isn't in config file
             std::cout << " WARNING :: BEST : Configuration " << defaultConfig.first << " not defined." << std::endl;
             std::cout << " WARNING :: BEST : Setting value to default value: " << defaultConfig.second << std::endl;
