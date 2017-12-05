@@ -144,8 +144,9 @@ First, checkout `lwtnn` following the instructions
 Then:
 ```
 git clone https://github.com/demarley/BESTAnalysis.git 
+cd BESTAnalysis
 git checkout sklearn-lwtnn-interface
-cd BESTAnalysis/BoostedEventShapeTagger
+cd BoostedEventShapeTagger
 scram b -j8
 ```
 

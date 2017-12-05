@@ -26,8 +26,8 @@
 #include "TFile.h"
 
 // lwtnn
-#include "diHiggs/lwtnn/interface/LightweightNeuralNetwork.hh"
-#include "diHiggs/lwtnn/interface/parse_json.hh"
+#include "lwtnn/lwtnn/interface/LightweightNeuralNetwork.hh"
+#include "lwtnn/lwtnn/interface/parse_json.hh"
 
 
 // BoostedEventShapeTagger Class
