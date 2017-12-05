@@ -14,7 +14,7 @@ scram b
 
 To get started:
 ```
-cd Analysis/BESTProducer/test
+cd BESTAnalysis/BESTProducer/test
 cmsRun run_HH.py
 ```
 
