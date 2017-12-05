@@ -356,88 +356,88 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ_W.size()); ii<size; ii++){
         sumPz[1] += jetsFJ_W[ii].pz();
         sumP[1]  += sqrt( jetsFJ_W[ii].modp2() );
-		thisJetLV  = TLorentzVector(jetsFJ_W[ii].px(), jetsFJ_W[ii].py(), jetsFJ_W[ii].pz(), jetsFJ_W[ii].e());
-		m1234LV_W += thisJetLV;
-		switch (ii){
-			case 0:
-				m12LV_W += thisJetLV;
-				m13LV_W += thisJetLV;
-				break;
-			case 1:
-				m12LV_W += thisJetLV;
-				m23LV_W += thisJetLV;
-				break;
-			case 2:
-				m13LV_W += thisJetLV;
-				m23LV_W += thisJetLV;
-				break;
-		}
+        thisJetLV  = TLorentzVector(jetsFJ_W[ii].px(), jetsFJ_W[ii].py(), jetsFJ_W[ii].pz(), jetsFJ_W[ii].e());
+        m1234LV_W += thisJetLV;
+        switch (ii){
+            case 0:
+                m12LV_W += thisJetLV;
+                m13LV_W += thisJetLV;
+                break;
+            case 1:
+                m12LV_W += thisJetLV;
+                m23LV_W += thisJetLV;
+                break;
+            case 2:
+                m13LV_W += thisJetLV;
+                m23LV_W += thisJetLV;
+                break;
+        }
     }
 
     // -- Z jets
     for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ_Z.size()); ii<size; ii++){
         sumPz[2] += jetsFJ_Z[ii].pz();
         sumP[2]  += sqrt( jetsFJ_Z[ii].modp2() );
-		thisJetLV  = TLorentzVector(jetsFJ_Z[ii].px(), jetsFJ_Z[ii].py(), jetsFJ_Z[ii].pz(), jetsFJ_Z[ii].e());
-		m1234LV_Z += thisJetLV;
-		switch (ii){
-			case 0:
-				m12LV_Z += thisJetLV;
-				m13LV_Z += thisJetLV;
-				break;
-			case 1:
-				m12LV_Z += thisJetLV;
-				m23LV_Z += thisJetLV;
-				break;
-			case 2:
-				m13LV_Z += thisJetLV;
-				m23LV_Z += thisJetLV;
-				break;
-		}
+        thisJetLV  = TLorentzVector(jetsFJ_Z[ii].px(), jetsFJ_Z[ii].py(), jetsFJ_Z[ii].pz(), jetsFJ_Z[ii].e());
+        m1234LV_Z += thisJetLV;
+        switch (ii){
+            case 0:
+                m12LV_Z += thisJetLV;
+                m13LV_Z += thisJetLV;
+                break;
+            case 1:
+                m12LV_Z += thisJetLV;
+                m23LV_Z += thisJetLV;
+                break;
+            case 2:
+                m13LV_Z += thisJetLV;
+                m23LV_Z += thisJetLV;
+                break;
+        }
     }
 
     // -- Higgs jets
     for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ_H.size()); ii<size; ii++){
         sumPz[3] += jetsFJ_H[ii].pz();
         sumP[3]  += sqrt( jetsFJ_H[ii].modp2() );
-		thisJetLV  = TLorentzVector(jetsFJ_H[ii].px(), jetsFJ_H[ii].py(), jetsFJ_H[ii].pz(), jetsFJ_H[ii].e());
-		m1234LV_H += thisJetLV;
-		switch (ii){
-			case 0:
-				m12LV_H += thisJetLV;
-				m13LV_H += thisJetLV;
-				break;
-			case 1:
-				m12LV_H += thisJetLV;
-				m23LV_H += thisJetLV;
-				break;
-			case 2:
-				m13LV_H += thisJetLV;
-				m23LV_H += thisJetLV;
-				break;
-		}
+        thisJetLV  = TLorentzVector(jetsFJ_H[ii].px(), jetsFJ_H[ii].py(), jetsFJ_H[ii].pz(), jetsFJ_H[ii].e());
+        m1234LV_H += thisJetLV;
+        switch (ii){
+            case 0:
+                m12LV_H += thisJetLV;
+                m13LV_H += thisJetLV;
+                break;
+            case 1:
+                m12LV_H += thisJetLV;
+                m23LV_H += thisJetLV;
+                break;
+            case 2:
+                m13LV_H += thisJetLV;
+                m23LV_H += thisJetLV;
+                break;
+        }
     }
 
     // -- jets
     for (size_t ii=0,size=std::min(m_maxJetSize,jetsFJ_jet.size()); ii<size; ii++){
         sumPz[4] += jetsFJ_jet[ii].pz();
         sumP[4]  += sqrt( jetsFJ_jet[ii].modp2() );
-		thisJetLV    = TLorentzVector(jetsFJ_jet[ii].px(), jetsFJ_jet[ii].py(), jetsFJ_jet[ii].pz(), jetsFJ_jet[ii].e());
-		m1234LV_jet += thisJetLV;
-		switch (ii){
-			case 0:
-				m12LV_jet += thisJetLV;
-				m13LV_jet += thisJetLV;
-				break;
-			case 1:
-				m12LV_jet += thisJetLV;
-				m23LV_jet += thisJetLV;
-				break;
-			case 2:
-				m13LV_jet += thisJetLV;
-				m23LV_jet += thisJetLV;
-				break;
-		}
+        thisJetLV    = TLorentzVector(jetsFJ_jet[ii].px(), jetsFJ_jet[ii].py(), jetsFJ_jet[ii].pz(), jetsFJ_jet[ii].e());
+        m1234LV_jet += thisJetLV;
+        switch (ii){
+            case 0:
+                m12LV_jet += thisJetLV;
+                m13LV_jet += thisJetLV;
+                break;
+            case 1:
+                m12LV_jet += thisJetLV;
+                m23LV_jet += thisJetLV;
+                break;
+            case 2:
+                m13LV_jet += thisJetLV;
+                m23LV_jet += thisJetLV;
+                break;
+        }
     }
 
 
@@ -451,32 +451,32 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     m_BESTvars["SDmass"]  = jet.userFloat("ak8PFJetsCHSSoftDropMass");
     m_BESTvars["tau32"]   = (tau2 > 1e-8) ? tau3/tau2 : 999.;
     m_BESTvars["tau21"]   = (tau1 > 1e-8) ? tau2/tau1 : 999.;
-	m_BESTvars["q"]       = jetq;
+    m_BESTvars["q"]       = jetq;
 
-	m_BESTvars["m1234_jet"] = m1234LV_jet.M();
-	m_BESTvars["m12_jet"]   = m12LV_jet.M();
-	m_BESTvars["m23_jet"]   = m23LV_jet.M();
-	m_BESTvars["m13_jet"]   = m13LV_jet.M();
+    m_BESTvars["m1234_jet"] = m1234LV_jet.M();
+    m_BESTvars["m12_jet"]   = m12LV_jet.M();
+    m_BESTvars["m23_jet"]   = m23LV_jet.M();
+    m_BESTvars["m13_jet"]   = m13LV_jet.M();
 
-	m_BESTvars["m1234top"] = m1234LV_top.M();
-	m_BESTvars["m12top"]   = m12LV_top.M();
-	m_BESTvars["m23top"]   = m23LV_top.M();
-	m_BESTvars["m13top"]   = m13LV_top.M();
+    m_BESTvars["m1234top"] = m1234LV_top.M();
+    m_BESTvars["m12top"]   = m12LV_top.M();
+    m_BESTvars["m23top"]   = m23LV_top.M();
+    m_BESTvars["m13top"]   = m13LV_top.M();
 
-	m_BESTvars["m1234W"] = m1234LV_W.M();
-	m_BESTvars["m12W"]   = m12LV_W.M();
-	m_BESTvars["m23W"]   = m23LV_W.M();
-	m_BESTvars["m13W"]   = m13LV_W.M();
+    m_BESTvars["m1234W"] = m1234LV_W.M();
+    m_BESTvars["m12W"]   = m12LV_W.M();
+    m_BESTvars["m23W"]   = m23LV_W.M();
+    m_BESTvars["m13W"]   = m13LV_W.M();
 
-	m_BESTvars["m1234Z"] = m1234LV_Z.M();
-	m_BESTvars["m12Z"]   = m12LV_Z.M();
-	m_BESTvars["m23Z"]   = m23LV_Z.M();
-	m_BESTvars["m13Z"]   = m13LV_Z.M();
+    m_BESTvars["m1234Z"] = m1234LV_Z.M();
+    m_BESTvars["m12Z"]   = m12LV_Z.M();
+    m_BESTvars["m23Z"]   = m23LV_Z.M();
+    m_BESTvars["m13Z"]   = m13LV_Z.M();
 
-	m_BESTvars["m1234H"] = m1234LV_H.M();
-	m_BESTvars["m12H"]   = m12LV_H.M();
-	m_BESTvars["m23H"]   = m23LV_H.M();
-	m_BESTvars["m13H"]   = m13LV_H.M();
+    m_BESTvars["m1234H"] = m1234LV_H.M();
+    m_BESTvars["m12H"]   = m12LV_H.M();
+    m_BESTvars["m23H"]   = m23LV_H.M();
+    m_BESTvars["m13H"]   = m13LV_H.M();
 
     std::vector<std::string> jetNames = {"top","W","Z","H","jet"};
 

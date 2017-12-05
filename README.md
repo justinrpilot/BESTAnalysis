@@ -120,11 +120,15 @@ Script | Description
 
 ## Standalone
 
-To use the BEST tagger inside of another framework, 
+To use BEST inside of another framework, 
 access the class in the `BoostedEventShapeTagger` directory.  
-The class requires a minimal setup 
-(initialize the TMVA object and generate inputs to the network to obtain output).  
-An example configuration file is provided in "BESTAnalysis/BoostedEventShapeTagger/data/config.txt".
+This requires a minimal setup relying on the [lwtnn](https://github.com/demarley/lwtnn/tree/CMSSW_8_0_X-compatible#cmssw-compatibility) framework 
+that provides an interface for machine learning frameworks, developed using python libraries,
+in a c++ environment (initialize the `lwtnn` object and generate inputs to the network to obtain the output).  
+
+The BEST model was developed using [scikit-learn](http://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html#sklearn.neural_network.MLPClassifier).  
+A script `BoostedEventShapeTagger/python/sklearn2json.py` is used to convert the scikit-learn model
+into a format for `lwtnn`.
 
 Checkout & build (after setting up your CMSSW environment!):
 ```
@@ -154,6 +158,8 @@ delete m_BEST;
 std::vector<float> NNresults = m_BEST->execute(ijet);  // ijet is a pat::Jet
 int particleType = m_BEST->getParticleID();            // automatically calculate the particle classification
 ```
+The file `config.txt` is a configuration file that sets parameters for BEST.  
+An example configuration file is provided in `BESTAnalysis/BoostedEventShapeTagger/data/config.txt`.
 
 - BuildFile
 ```BuildFile.xml
