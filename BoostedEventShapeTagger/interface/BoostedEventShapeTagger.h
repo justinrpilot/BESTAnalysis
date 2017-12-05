@@ -66,9 +66,10 @@ class BoostedEventShapeTagger {
     std::map<std::string,std::string> m_configurations; // map of configurations
 
     // kinematics
-    bool m_applyKinematicCuts;  // restrict jets to meet certain kinematic thresholds
     float m_jetSoftDropMassMin; // [GeV] Jet soft drop mass minimum
     float m_jetPtMin;           // [GeV] Jet pT minimum
+    unsigned int m_numSubjetsMin;    // minimum number of subjets
+    unsigned int m_numDaughtersMin;  // minimum number of daughters
 
     // boosting to rest frames
     float m_radiusSmall;        // re-clustering jets
@@ -85,14 +86,15 @@ class BoostedEventShapeTagger {
 
     std::map<std::string,std::string> m_defaultConfigs = {
              {"dnnFile",             "BESTAnalysis/BoostedEventShapeTagger/data/BEST_mlp.json"},
-             {"applyKinematicCuts",  "true"},
              {"radiusSmall",         "0.4"},
              {"radiusLarge",         "0.8"},
              {"reclusterJetPtMin",   "30.0"},
              {"jetSoftDropMassMin",  "40.0"},
              {"jetPtMin",            "500.0"},
              {"jetChargeKappa",      "0.6"},
-             {"maxJetSize",          "4"} };
+             {"maxJetSize",          "4"},
+             {"numSubjetsMin",       "2"},
+             {"numDaughtersMin",     "2"} };
 };
 
 #endif

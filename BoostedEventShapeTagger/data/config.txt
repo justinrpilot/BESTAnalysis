@@ -5,3 +5,5 @@ radiusLarge 0.8
 reclusterJetPtMin 30.0
 jetSoftDropMassMin 40.0
 jetPtMin 500.0
+numSubjetsMin 2
+numDaughtersMin 2

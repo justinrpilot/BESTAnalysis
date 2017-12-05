@@ -25,7 +25,6 @@ Requires MiniAOD inputs to access proper set of information
 // constructor
 BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) :
   m_lwtnn(nullptr),
-  m_applyKinematicCuts(true),
   m_jetSoftDropMassMin(0),
   m_jetPtMin(0),
   m_radiusSmall(0),
@@ -40,9 +39,10 @@ BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) 
 
 
     // Basic options
-    m_applyKinematicCuts = str2bool(m_configurations.at("applyKinematicCuts"));
-    m_jetSoftDropMassMin = std::stof(m_configurations.at("jetSoftDropMassMin"));
-    m_jetPtMin           = std::stof(m_configurations.at("jetPtMin"));
+    m_numSubjetsMin      = std::stoi(m_configurations.at("numSubjetsMin"));      // min. number of subjets
+    m_numDaughtersMin    = std::stoi(m_configurations.at("numDaughtersMin"));    // min. daughters
+    m_jetSoftDropMassMin = std::stof(m_configurations.at("jetSoftDropMassMin")); // min. soft drop mass
+    m_jetPtMin           = std::stof(m_configurations.at("jetPtMin"));           // min. jet pT
 
     m_radiusSmall        = std::stof(m_configurations.at("radiusSmall"));
     m_radiusLarge        = std::stof(m_configurations.at("radiusLarge"));
@@ -64,7 +64,7 @@ BoostedEventShapeTagger::~BoostedEventShapeTagger(){}
 
 std::map<std::string,double> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
     /* Dan Guest's lightweight DNN framework */
-    getJetValues(jet);       // update m_BESTvars
+    getJetValues(jet);                            // update m_BESTvars
     m_NNresults = m_lwtnn->compute(m_BESTvars);
 
     return m_NNresults;
@@ -91,17 +91,27 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     // clear the map from the previous jet's values
     m_BESTvars.clear();
 
-    // Cut on jet kinematics: pT & soft-drop mass cut
-    if (m_applyKinematicCuts) {
-        if ( jet.pt() < m_jetPtMin || jet.userFloat("ak8PFJetsCHSSoftDropMass") < m_jetSoftDropMassMin)
-            return;
-    }
-
     // Access the subjets
     auto const& thisSubjets   = jet.subjets();
     unsigned int numDaughters = jet.numberOfDaughters();
-    if (thisSubjets.size() < 2) return;
-    if (numDaughters < 2) return;
+
+    // Do some checks on the jets and print warnings to the user
+    if (thisSubjets.size() < m_numSubjetsMin){
+        std::cout << " WARNING :: BEST : Number of subjets, " << thisSubjets.size() << ", is less than " << m_numSubjetsMin << std::endl;
+        std::cout << " WARNING :: BEST : -- BEST will NOT run.  Please check your jets! " << std::endl;
+    }
+    if (numDaughters < m_numDaughtersMin){
+        std::cout << " WARNING :: BEST : Number of daughters, " << numDaughters << ", is less than " << m_numDaughtersMin << std::endl;
+        std::cout << " WARNING :: BEST : -- BEST will NOT run.  Please check your jets! " << std::endl;
+    }
+    if ( jet.pt() < m_jetPtMin){
+        std::cout << " WARNING :: BEST : The jet pT " << numDaughters << ", is less than " << m_jetPtMin << std::endl;
+        std::cout << " WARNING :: BEST : -- BEST will run, but the results can't be trusted! Please check your jets! " << std::endl;
+    }
+    if (jet.userFloat("ak8PFJetsCHSSoftDropMass") < m_jetSoftDropMassMin){
+        std::cout << " WARNING :: BEST : Number of daughters, " << numDaughters << ", is less than " << m_jetSoftDropMassMin << std::endl;
+        std::cout << " WARNING :: BEST : -- BEST will run, but the results can't be trusted! Please check your jets! " << std::endl;
+    }
 
 
     // b-tagging
@@ -163,8 +173,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
 
     // loop over daughters
     auto daus(jet.daughterPtrVector());            // load the daughters
-    auto daughter0 = daus.at(0);                   // First soft drop constituent
-    auto daughter1 = daus.at(1);                   // Second soft drop constituent
+    auto daughter0 = jet.daughter(0); //daus.at(0);                   // First soft drop constituent
+    auto daughter1 = jet.daughter(1); //daus.at(1);                   // Second soft drop constituent
     std::vector<reco::Candidate*> daughtersOfJet;  // store all daughters in one vector
 
     // access daughters of the first soft drop constituent
@@ -177,8 +187,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     }
 
     // access remaining daughters not retained by in soft drop
-    for (unsigned int i=2,size=daus.size(); i<size; i++){
-        daughtersOfJet.push_back( (reco::Candidate *) daus.at(i) );
+    for (unsigned int i=2,size=jet.numberOfDaughters()/*daus.size()*/; i<size; i++){
+        daughtersOfJet.push_back( (reco::Candidate*)jet.daughter(i) ); //(reco::Candidate)daus.at(i) );
     }
 
     for(unsigned int i=0,size=daughtersOfJet.size(); i<size; i++){
@@ -448,25 +458,25 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
 	m_BESTvars["m23_jet"]   = m23LV_jet.M();
 	m_BESTvars["m13_jet"]   = m13LV_jet.M();
 
-	m_BESTvars["m1234_top"] = m1234LV_top.M();
-	m_BESTvars["m12_top"]   = m12LV_top.M();
-	m_BESTvars["m23_top"]   = m23LV_top.M();
-	m_BESTvars["m13_top"]   = m13LV_top.M();
+	m_BESTvars["m1234top"] = m1234LV_top.M();
+	m_BESTvars["m12top"]   = m12LV_top.M();
+	m_BESTvars["m23top"]   = m23LV_top.M();
+	m_BESTvars["m13top"]   = m13LV_top.M();
 
-	m_BESTvars["m1234_W"] = m1234LV_W.M();
-	m_BESTvars["m12_W"]   = m12LV_W.M();
-	m_BESTvars["m23_W"]   = m23LV_W.M();
-	m_BESTvars["m13_W"]   = m13LV_W.M();
+	m_BESTvars["m1234W"] = m1234LV_W.M();
+	m_BESTvars["m12W"]   = m12LV_W.M();
+	m_BESTvars["m23W"]   = m23LV_W.M();
+	m_BESTvars["m13W"]   = m13LV_W.M();
 
-	m_BESTvars["m1234_Z"] = m1234LV_Z.M();
-	m_BESTvars["m12_Z"]   = m12LV_Z.M();
-	m_BESTvars["m23_Z"]   = m23LV_Z.M();
-	m_BESTvars["m13_Z"]   = m13LV_Z.M();
+	m_BESTvars["m1234Z"] = m1234LV_Z.M();
+	m_BESTvars["m12Z"]   = m12LV_Z.M();
+	m_BESTvars["m23Z"]   = m23LV_Z.M();
+	m_BESTvars["m13Z"]   = m13LV_Z.M();
 
-	m_BESTvars["m1234_H"] = m1234LV_H.M();
-	m_BESTvars["m12_H"]   = m12LV_H.M();
-	m_BESTvars["m23_H"]   = m23LV_H.M();
-	m_BESTvars["m13_H"]   = m13LV_H.M();
+	m_BESTvars["m1234H"] = m1234LV_H.M();
+	m_BESTvars["m12H"]   = m12LV_H.M();
+	m_BESTvars["m23H"]   = m23LV_H.M();
+	m_BESTvars["m13H"]   = m13LV_H.M();
 
     std::vector<std::string> jetNames = {"top","W","Z","H","jet"};
 
