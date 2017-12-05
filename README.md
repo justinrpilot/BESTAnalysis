@@ -8,7 +8,7 @@ To check out:
 cmsrel CMSSW_8_0_12
 cd CMSSW_8_0_12/src
 cmsenv
-git clone https://github.com/justinrpilot/BESTAnalysis Analysis
+git clone https://github.com/justinrpilot/BESTAnalysis BESTAnalysis
 scram b 
 ```
 
