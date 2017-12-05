@@ -1,6 +1,6 @@
 /*
 Created:        28 November 2017
-Last Updated:   28 November 2017
+Last Updated:    4 December 2017
 
 Justin Pilot
 UC Davis
@@ -59,7 +59,9 @@ BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) 
 } // end constructor
 
 
-BoostedEventShapeTagger::~BoostedEventShapeTagger(){}
+BoostedEventShapeTagger::~BoostedEventShapeTagger(){
+    delete m_lwtnn;
+}
 
 
 std::map<std::string,double> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
