@@ -122,17 +122,29 @@ Script | Description
 
 To use BEST inside of another framework, 
 access the class in the `BoostedEventShapeTagger` directory.  
-This requires a minimal setup relying on the [lwtnn](https://github.com/demarley/lwtnn/tree/CMSSW_8_0_X-compatible#cmssw-compatibility) framework 
-that provides an interface for machine learning frameworks, developed using python libraries,
-in a c++ environment (initialize the `lwtnn` object and generate inputs to the network to obtain the output).  
+This requires setting up the [lwtnn](https://github.com/demarley/lwtnn/tree/CMSSW_8_0_X-compatible#cmssw-compatibility) framework, which
+provides an interface for machine learning frameworks, developed using python libraries,
+in a c++ environment (initialize the `lwtnn` object, generate inputs to the network, and obtain the output).  
 
 The BEST model was developed using [scikit-learn](http://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier.html#sklearn.neural_network.MLPClassifier).  
-A script `BoostedEventShapeTagger/python/sklearn2json.py` is used to convert the scikit-learn model
-into a format for `lwtnn`.
+The script `BoostedEventShapeTagger/python/sklearn2json.py` converts the scikit-learn model
+into a format appropriate for `lwtnn`.
 
-Checkout & build (after setting up your CMSSW environment!):
+The class returns a `std::map<std::string,double>` containing the NN values for the different predictions:
+
+- "dnn_qcd"
+- "dnn_top"
+- "dnn_higgs"
+- "dnn_z"
+- "dnn_w"
+
+To implement, checkout & build the framework(after setting up your CMSSW environment!).  
+First, checkout `lwtnn` following the instructions 
+[here](https://github.com/demarley/lwtnn/tree/CMSSW_8_0_X-compatible#cmssw-compatibility).  
+Then:
 ```
 git clone https://github.com/demarley/BESTAnalysis.git 
+git checkout sklearn-lwtnn-interface
 cd BESTAnalysis/BoostedEventShapeTagger
 scram b -j8
 ```
@@ -155,8 +167,8 @@ m_BEST = new BoostedEventShapeTagger( "BESTAnalysis/BoostedEventShapeTagger/data
 delete m_BEST;
 
 // event loop
-std::vector<float> NNresults = m_BEST->execute(ijet);  // ijet is a pat::Jet
-int particleType = m_BEST->getParticleID();            // automatically calculate the particle classification
+std::map<std::string,double> NNresults = m_BEST->execute(ijet);  // ijet is a pat::Jet
+int particleType = m_BEST->getParticleID();                      // automatically calculate the particle classification
 ```
 The file `config.txt` is a configuration file that sets parameters for BEST.  
 An example configuration file is provided in `BESTAnalysis/BoostedEventShapeTagger/data/config.txt`.
