@@ -141,7 +141,7 @@ class Sklearn2json(object):
             layer = {}
             layer["architecture"] = self.architecutre
             layer["activation"]   = self.nodeActivation
-            layer["weights"]      = self.weights[l].flatten().tolist()
+            layer["weights"]      = self.weights[l].T.flatten().tolist()
             layer["bias"]         = self.biases[l].flatten().tolist()
 
             self.output["layers"].append(layer)
