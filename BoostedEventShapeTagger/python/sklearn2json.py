@@ -162,8 +162,9 @@ class Sklearn2json(object):
 
     def saveModel(self):
         """Save data to JSON file"""
-        with open(self.output_file, 'w') as outfile:
-            json.dump(self.output, outfile)
+        print(json.dumps(self.output, indent=2, sort_keys=True))
+#        with open(self.output_file, 'w') as outfile:
+#            json.dump(self.output, outfile)
 
         return
 
