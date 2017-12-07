@@ -1,9 +1,3 @@
- Running scikit-learn to JSON converter 
- > Generating variables JSON file data/BEST_mlp_variables.json
- > Load sklearn model 
- > Load variables JSON 
- > Load layers of neural network into dictionary 
- > Save model to data/BEST_mlp.json
 {
   "defaults": {}, 
   "inputs": [

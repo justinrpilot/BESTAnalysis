@@ -53,9 +53,13 @@ BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) 
 
     // DNN material lwtnn interface
     std::string dnnFile = m_configurations.at("dnnFile");
+    std::cout << " BUILD LWTNN OBJECT " << dnnFile << std::endl;
+
     std::ifstream input_cfg( dnnFile );                     // original: "data/BEST_mlp.json"
     lwt::JSONConfig cfg = lwt::parse_json( input_cfg );
     m_lwtnn = new lwt::LightweightNeuralNetwork(cfg.inputs, cfg.layers, cfg.outputs);
+
+    std::cout << " BUILT LWTNN OBJECT " << std::endl;
 } // end constructor
 
 
@@ -67,7 +71,20 @@ BoostedEventShapeTagger::~BoostedEventShapeTagger(){
 std::map<std::string,double> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
     /* Dan Guest's lightweight DNN framework */
     getJetValues(jet);                            // update m_BESTvars
+
+    // set values (testing)
+    m_NNresults = {
+        {"dnn_qcd",  0.7},
+        {"dnn_top",  0.6},
+        {"dnn_higgs",0.5},
+        {"dnn_z",    0.4},
+        {"dnn_w",    0.3}
+    };
+
     m_NNresults = m_lwtnn->compute(m_BESTvars);
+
+    for (const auto& x : m_NNresults)
+        std::cout << " score: " << x.first << " = " << x.second << std::endl;
 
     return m_NNresults;
 }
