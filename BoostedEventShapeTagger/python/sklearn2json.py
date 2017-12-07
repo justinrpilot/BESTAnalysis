@@ -26,6 +26,7 @@ NB:
 import sys
 import json
 import numpy as np
+from math import sqrt
 from argparse import ArgumentParser
 from sklearn import svm, metrics, preprocessing
 from sklearn.externals import joblib
@@ -181,7 +182,7 @@ class Sklearn2json(object):
             var = var.rstrip('\n')
             input = {"name": var,
                      "scale":-scaler.mean_[i],
-                     "offset":1/scaler.var_[i]}
+                     "offset":1/ sqrt(scaler.var_[i]) }
             variablesJSON["inputs"].append(input)
 
 
@@ -214,6 +215,9 @@ if __name__ == '__main__':
                         default='data/BEST_scaler.pkl',
                         dest='scaler',
                         help='Name of the scaler from scikit-learn to scale inputs.')
+    parser.add_argument('-mv','--make_variables', action='store_true',
+                        dest='make_variables',
+                        help='Make the JSON file that contains variable names with scaling and offset values.')
     results = parser.parse_args()
 
 
@@ -226,11 +230,11 @@ if __name__ == '__main__':
     conv.variables_file = results.variables # 'BEST_mlp_variables.json'
 
     # generate variables JSON (add options later, if needed)
-    conv.makeVariablesJSON = False
-    if conv.makeVariablesJSON:
-        conv.listOfVariables   = 'data/BEST_mlp_variables.txt'
-        conv.class_labels  = ["dnn_qcd","dnn_w","dnn_z","dnn_higgs","dnn_top"]
-        conv.miscellaneous = {"scikit-learn": "0.18.1"}
+    conv.makeVariablesJSON = results.make_variables
+    if results.make_variables:
+        conv.listOfVariables = 'data/BEST_mlp_variables.txt'
+        conv.class_labels    = ["dnn_qcd","dnn_w","dnn_z","dnn_higgs","dnn_top"]
+        conv.miscellaneous   = {"scikit-learn": "0.18.1"}
 
     # execute the converter!
     conv.execute()
