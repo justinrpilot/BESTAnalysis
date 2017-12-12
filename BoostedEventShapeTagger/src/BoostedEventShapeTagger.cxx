@@ -53,13 +53,9 @@ BoostedEventShapeTagger::BoostedEventShapeTagger(const std::string& configFile) 
 
     // DNN material lwtnn interface
     std::string dnnFile = m_configurations.at("dnnFile");
-    std::cout << " BUILD LWTNN OBJECT " << dnnFile << std::endl;
-
     std::ifstream input_cfg( dnnFile );                     // original: "data/BEST_mlp.json"
     lwt::JSONConfig cfg = lwt::parse_json( input_cfg );
     m_lwtnn = new lwt::LightweightNeuralNetwork(cfg.inputs, cfg.layers, cfg.outputs);
-
-    std::cout << " BUILT LWTNN OBJECT " << std::endl;
 } // end constructor
 
 
@@ -82,9 +78,6 @@ std::map<std::string,double> BoostedEventShapeTagger::execute( const pat::Jet& j
     };
 
     m_NNresults = m_lwtnn->compute(m_BESTvars);
-
-    for (const auto& x : m_NNresults)
-        std::cout << " score: " << x.first << " = " << x.second << std::endl;
 
     return m_NNresults;
 }

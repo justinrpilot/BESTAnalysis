@@ -182,8 +182,8 @@ class Sklearn2json(object):
         for i,var in enumerate(vars):
             var = var.rstrip('\n')
             input = {"name": var,
-                     "scale":-scaler.mean_[i],
-                     "offset":1/ sqrt(scaler.var_[i]) }
+                     "offset":-scaler.mean_[i],
+                     "scale":1/sqrt(scaler.var_[i]) }
             variablesJSON["inputs"].append(input)
 
 
