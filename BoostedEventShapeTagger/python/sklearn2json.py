@@ -20,13 +20,12 @@ Convert simple sklearn MLP Classifer to proper format for lwtnn framework.
 WARNING: Some values are hard-coded due to my ignorance with sklearn interface
 NB:
    scale/offset defined from "StandardScalar"
-     offset = -mean          (attribute: mean_)
-     1 / standard_deviation  (attribute: var_)
+     offset = -mean          (attribute: mean_[i])
+     1 / standard_deviation  (attribute: scaler.scale_[i])
 """
 import sys
 import json
 import numpy as np
-from math import sqrt
 from argparse import ArgumentParser
 from sklearn import svm, metrics, preprocessing
 from sklearn.externals import joblib
@@ -183,7 +182,7 @@ class Sklearn2json(object):
             var = var.rstrip('\n')
             input = {"name": var,
                      "offset":-scaler.mean_[i],
-                     "scale":1/sqrt(scaler.var_[i]) }
+                     "scale":1/scaler.scale_[i] }
             variablesJSON["inputs"].append(input)
 
 
