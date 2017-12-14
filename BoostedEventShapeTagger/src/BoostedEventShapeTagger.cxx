@@ -77,10 +77,6 @@ std::map<std::string,double> BoostedEventShapeTagger::execute( const pat::Jet& j
         {"dnn_w",    0.3}
     };
 
-
-    for (const auto& x : m_BESTvars)
-        std::cout << x.first << ", " << x.second << std::endl;
-
     m_NNresults = m_lwtnn->compute(m_BESTvars);
 
     return m_NNresults;
