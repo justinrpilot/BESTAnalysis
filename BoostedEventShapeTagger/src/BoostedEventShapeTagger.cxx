@@ -67,6 +67,16 @@ BoostedEventShapeTagger::~BoostedEventShapeTagger(){
 std::map<std::string,double> BoostedEventShapeTagger::execute( const pat::Jet& jet ){
     /* Dan Guest's lightweight DNN framework */
     getJetValues(jet);                            // update m_BESTvars
+
+    // set values (testing)
+    m_NNresults = {
+        {"dnn_qcd",  0.7},
+        {"dnn_top",  0.6},
+        {"dnn_higgs",0.5},
+        {"dnn_z",    0.4},
+        {"dnn_w",    0.3}
+    };
+
     m_NNresults = m_lwtnn->compute(m_BESTvars);
 
     return m_NNresults;
@@ -82,7 +92,6 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
          >=2 daughters
            daughter->pt() >= 0.05
          m_reclusterJetPtMin = 30 GeV
-           transformed jets uses 10 GeV
          maxJets = 4
            sumP, sumPz
            pair-wise invariant mass
@@ -107,11 +116,11 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
         std::cout << " WARNING :: BEST : -- BEST will NOT run.  Please check your jets! " << std::endl;
     }
     if ( jet.pt() < m_jetPtMin){
-        std::cout << " WARNING :: BEST : The jet pT " << numDaughters << ", is less than " << m_jetPtMin << std::endl;
+        std::cout << " WARNING :: BEST : The jet pT " << jet.pt() << ", is less than " << m_jetPtMin << std::endl;
         std::cout << " WARNING :: BEST : -- BEST will run, but the results can't be trusted! Please check your jets! " << std::endl;
     }
     if (jet.userFloat("ak8PFJetsCHSSoftDropMass") < m_jetSoftDropMassMin){
-        std::cout << " WARNING :: BEST : Number of daughters, " << numDaughters << ", is less than " << m_jetSoftDropMassMin << std::endl;
+        std::cout << " WARNING :: BEST : The soft-drop mass " << jet.userFloat("ak8PFJetsCHSSoftDropMass") << ", is less than " << m_jetSoftDropMassMin << std::endl;
         std::cout << " WARNING :: BEST : -- BEST will run, but the results can't be trusted! Please check your jets! " << std::endl;
     }
 
@@ -170,14 +179,14 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
     TVector3 transformedV;
 
     // Jet charge calculation (from daughters)
-    float qxptsum(0.0);                            // jet charge
-    float ptsum = pow(jet.pt(), m_jetChargeKappa); // weighted jet pT
+    float qxptsum(0.0);                             // jet charge
+    float ptsum = pow(jet.pt(), m_jetChargeKappa);  // weighted jet pT
 
     // loop over daughters
-    auto daus(jet.daughterPtrVector());            // load the daughters
-    auto daughter0 = jet.daughter(0); //daus.at(0);                   // First soft drop constituent
-    auto daughter1 = jet.daughter(1); //daus.at(1);                   // Second soft drop constituent
-    std::vector<reco::Candidate*> daughtersOfJet;  // store all daughters in one vector
+    auto daus(jet.daughterPtrVector());             // load the daughters
+    auto daughter0 = jet.daughter(0); //daus.at(0); // First soft drop constituent
+    auto daughter1 = jet.daughter(1); //daus.at(1); // Second soft drop constituent
+    std::vector<reco::Candidate*> daughtersOfJet;   // store all daughters in one vector
 
     // access daughters of the first soft drop constituent
     for (unsigned int i=0,size=daughter0->numberOfDaughters(); i<size; i++){
@@ -197,7 +206,7 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
 
         auto daughter = daughtersOfJet.at(i);
 
-        if (daughter->pt() < 0.05) continue;
+        if (daughter->pt() < 0.5) continue;
 
         float dau_px = daughter->px();
         float dau_py = daughter->py();
@@ -294,13 +303,13 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
 
     ClusterSequence cs_transformed(jetFJparticles_transformed, jet_def);
 
-    std::vector<PseudoJet> jetsFJ     = cs.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_W   = cs_W.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_Z   = cs_Z.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_H   = cs_H.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_jet = cs_jet.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_noBoost     = cs_noBoost.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_transformed = cs_transformed.inclusive_jets(10.0);
+    std::vector<PseudoJet> jetsFJ     = sorted_by_pt( cs.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_W   = sorted_by_pt( cs_W.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_Z   = sorted_by_pt( cs_Z.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_H   = sorted_by_pt( cs_H.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_jet = sorted_by_pt( cs_jet.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_noBoost     = sorted_by_pt( cs_noBoost.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_transformed = sorted_by_pt( cs_transformed.inclusive_jets(m_reclusterJetPtMin) );
 
 
     // pair-wise invariant masses
@@ -351,6 +360,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
                 m13LV_top += thisJetLV;
                 m23LV_top += thisJetLV;
                 break;
+            case 3:
+                break;
         }
     }
 
@@ -372,6 +383,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
             case 2:
                 m13LV_W += thisJetLV;
                 m23LV_W += thisJetLV;
+                break;
+            case 3:
                 break;
         }
     }
@@ -395,6 +408,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
                 m13LV_Z += thisJetLV;
                 m23LV_Z += thisJetLV;
                 break;
+            case 3:
+                break;
         }
     }
 
@@ -417,6 +432,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
                 m13LV_H += thisJetLV;
                 m23LV_H += thisJetLV;
                 break;
+            case 3:
+                break;
         }
     }
 
@@ -438,6 +455,8 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
             case 2:
                 m13LV_jet += thisJetLV;
                 m23LV_jet += thisJetLV;
+                break;
+            case 3:
                 break;
         }
     }
@@ -554,16 +573,15 @@ void BoostedEventShapeTagger::pboost( TVector3 pbeam, TVector3 plab, TLorentzVec
     pbx.SetX(pbeam.Y());
     pbx.SetY(pbeam.X());
     pbx.SetZ(0.0);
-
-    pbx *= 1. / pbx.Mag();
+    pbx *= (1/pbx.Mag());
 
     // set y axis direction along -pbx x pbeam
     TVector3 pby;
-    pby = -pbx.Cross(pbeam);
-    pby *= 1. / pby.Mag();
+    pby  = -pbx.Cross(pbeam);
+    pby *= (1/pby.Mag());
 
-    pboo.SetX((plab.Dot(pbx)));
-    pboo.SetY((plab.Dot(pby)));
+    pboo.SetX(plab.Dot(pbx));
+    pboo.SetY(plab.Dot(pby));
     pboo.SetZ(pl);
 
     return;
