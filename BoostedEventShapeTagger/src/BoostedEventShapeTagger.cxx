@@ -303,13 +303,13 @@ void BoostedEventShapeTagger::getJetValues( const pat::Jet& jet ){
 
     ClusterSequence cs_transformed(jetFJparticles_transformed, jet_def);
 
-    std::vector<PseudoJet> jetsFJ     = cs.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_W   = cs_W.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_Z   = cs_Z.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_H   = cs_H.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_jet = cs_jet.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_noBoost     = cs_noBoost.inclusive_jets(m_reclusterJetPtMin);
-    std::vector<PseudoJet> jetsFJ_transformed = cs_transformed.inclusive_jets(m_reclusterJetPtMin);
+    std::vector<PseudoJet> jetsFJ     = sorted_by_pt( cs.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_W   = sorted_by_pt( cs_W.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_Z   = sorted_by_pt( cs_Z.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_H   = sorted_by_pt( cs_H.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_jet = sorted_by_pt( cs_jet.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_noBoost     = sorted_by_pt( cs_noBoost.inclusive_jets(m_reclusterJetPtMin) );
+    std::vector<PseudoJet> jetsFJ_transformed = sorted_by_pt( cs_transformed.inclusive_jets(m_reclusterJetPtMin) );
 
 
     // pair-wise invariant masses
