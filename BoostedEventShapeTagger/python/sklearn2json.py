@@ -20,13 +20,12 @@ Convert simple sklearn MLP Classifer to proper format for lwtnn framework.
 WARNING: Some values are hard-coded due to my ignorance with sklearn interface
 NB:
    scale/offset defined from "StandardScalar"
-     offset = -mean          (attribute: mean_)
-     1 / standard_deviation  (attribute: var_)
+     offset = -mean          (attribute: mean_[i])
+     1 / standard_deviation  (attribute: scaler.scale_[i])
 """
 import sys
 import json
 import numpy as np
-from math import sqrt
 from argparse import ArgumentParser
 from sklearn import svm, metrics, preprocessing
 from sklearn.externals import joblib
@@ -141,7 +140,7 @@ class Sklearn2json(object):
             layer = {}
             layer["architecture"] = self.architecutre
             layer["activation"]   = self.nodeActivation
-            layer["weights"]      = self.weights[l].flatten().tolist()
+            layer["weights"]      = self.weights[l].T.flatten().tolist()
             layer["bias"]         = self.biases[l].flatten().tolist()
 
             self.output["layers"].append(layer)
@@ -162,8 +161,9 @@ class Sklearn2json(object):
 
     def saveModel(self):
         """Save data to JSON file"""
-        with open(self.output_file, 'w') as outfile:
-            json.dump(self.output, outfile)
+        print(json.dumps(self.output, indent=2, sort_keys=True))
+#        with open(self.output_file, 'w') as outfile:
+#            json.dump(self.output, outfile)
 
         return
 
@@ -181,8 +181,8 @@ class Sklearn2json(object):
         for i,var in enumerate(vars):
             var = var.rstrip('\n')
             input = {"name": var,
-                     "scale":-scaler.mean_[i],
-                     "offset":1/ sqrt(scaler.var_[i]) }
+                     "offset":-scaler.mean_[i],
+                     "scale":1/scaler.scale_[i] }
             variablesJSON["inputs"].append(input)
 
 

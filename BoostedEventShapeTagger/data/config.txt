@@ -2,7 +2,7 @@ dnnFile BESTAnalysis/BoostedEventShapeTagger/data/BEST_mlp.json
 applyKinematicCuts true
 radiusSmall 0.4
 radiusLarge 0.8
-reclusterJetPtMin 30.0
+reclusterJetPtMin 20.0
 jetSoftDropMassMin 40.0
 jetPtMin 500.0
 numSubjetsMin 2
