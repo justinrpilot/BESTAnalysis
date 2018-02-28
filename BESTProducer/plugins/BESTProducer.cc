@@ -39,6 +39,7 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "PhysicsTools/CandUtils/interface/EventShapeVariables.h"
 #include "PhysicsTools/CandUtils/interface/Thrust.h"
+
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
 #include "fastjet/tools/Filter.hh"
@@ -76,12 +77,9 @@ class BESTProducer : public edm::stream::EDProducer<> {
       int FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
       void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );	
 
-      TFile *outfile;
-      TH2F *h_preBoostJet;
-      TH2F *h_postBoostJet;
       
 
-      TTree *jetTree;
+      //TTree *jetTree;
 
 
 
@@ -227,15 +225,11 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    produces<std::vector<float > > ("dRjetParticle");
    produces<std::vector<float > > ("topSize");
 
-   edm::Service<TFileService> fs;
-   h_preBoostJet = fs->make<TH2F>("h_preBoostJet", "h_preBoostJet", 50, -3, 3, 50, -3.5, 3.5);
-   h_postBoostJet = fs->make<TH2F>("h_postBoostJet", "h_postBoostJet", 50, -3, 3, 50, -3.5, 3.5);
+   //edm::Service<TFileService> fs;
    count = 0;
-   outfile = new TFile("jetPictures.root", "RECREATE"); 
-   outfile->cd();
    
 
-   jetTree = fs->make<TTree>("jetTree", "jetTree");
+   //jetTree = fs->make<TTree>("jetTree", "jetTree");
 
 
    listOfVars.push_back("et"); 
@@ -349,7 +343,7 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
 
         treeVars[ listOfVars[i] ] = -999.99;
 
-        jetTree->Branch( (listOfVars[i]).c_str() , &(treeVars[ listOfVars[i] ]), (listOfVars[i]+"/F").c_str() );
+        //jetTree->Branch( (listOfVars[i]).c_str() , &(treeVars[ listOfVars[i] ]), (listOfVars[i]+"/F").c_str() );
 
    }
 
@@ -399,8 +393,6 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
 
 BESTProducer::~BESTProducer()
 {
-   outfile->Write();
-   outfile->Close(); 
    // do anything here that needs to be done at destruction time
    // (e.g. close files, deallocate resources etc.)
 
@@ -425,94 +417,94 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
-   std::auto_ptr< std::vector<float > > fw_moments_0( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_1( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_2( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_3( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_4( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPztop( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPzW( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPzZ( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPzH( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPzjet( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPtop( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPW( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPZ( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPH( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sumPjet( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > Njetstop( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > NjetsW( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > NjetsZ( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > NjetsH( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > Njetsjet( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_1_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_2_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_3_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_4_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > isotropy_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sphericity_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > aplanarity_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > thrust_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_1_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_2_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_3_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_4_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > isotropy_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sphericity_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > aplanarity_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > thrust_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_1_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_2_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_3_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_4_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > isotropy_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sphericity_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > aplanarity_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > thrust_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_1_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_2_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_3_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > fw_moments_4_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > isotropy_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > sphericity_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > aplanarity_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > thrust_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > et( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > eta( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > mass( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > SDmass( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > tau32V( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > tau21V( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > bDiscV( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > bDisc1V( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > bDisc2V( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m12_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m23_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m13_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m1234_H( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m12_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m23_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m13_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m1234_Z( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m12_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m23_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m13_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m1234_W( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m12_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m23_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m13_top( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > m1234_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_0( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_1( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_2( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_3( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_4( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPztop( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPzW( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPzZ( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPzH( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPzjet( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPtop( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPW( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPZ( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPH( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sumPjet( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > Njetstop( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > NjetsW( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > NjetsZ( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > NjetsH( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > Njetsjet( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_1_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_2_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_3_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_4_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > isotropy_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sphericity_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > aplanarity_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > thrust_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_1_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_2_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_3_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_4_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > isotropy_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sphericity_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > aplanarity_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > thrust_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_1_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_2_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_3_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_4_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > isotropy_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sphericity_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > aplanarity_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > thrust_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_1_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_2_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_3_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > fw_moments_4_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > isotropy_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > sphericity_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > aplanarity_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > thrust_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > et( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > eta( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > mass( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > SDmass( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > tau32V( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > tau21V( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > bDiscV( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > bDisc1V( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > bDisc2V( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m12_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m23_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m13_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m1234_H( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m12_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m23_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m13_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m1234_Z( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m12_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m23_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m13_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m1234_W( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m12_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m23_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m13_top( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > m1234_top( new std::vector<float>() );
 
 
-   std::auto_ptr< std::vector<int > > vertV( new std::vector<int>() );
-   std::auto_ptr< std::vector<int > > nAK4JetsV( new std::vector<int>() );
-   std::auto_ptr< std::vector<float > > qV(new std::vector<float>() );
-   std::auto_ptr< std::vector<int > > decayModeV( new std::vector<int>() ) ;
-   std::auto_ptr< std::vector<pat::Jet > > savedJetsV( new std::vector<pat::Jet>() );
+   std::unique_ptr< std::vector<int > > vertV( new std::vector<int>() );
+   std::unique_ptr< std::vector<int > > nAK4JetsV( new std::vector<int>() );
+   std::unique_ptr< std::vector<float > > qV(new std::vector<float>() );
+   std::unique_ptr< std::vector<int > > decayModeV( new std::vector<int>() ) ;
+   std::unique_ptr< std::vector<pat::Jet > > savedJetsV( new std::vector<pat::Jet>() );
 
-   std::auto_ptr< std::vector<float > > genPt(new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > dRjetParticle( new std::vector<float>() );
-   std::auto_ptr< std::vector<float > > topSize(new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > genPt(new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > dRjetParticle( new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > topSize(new std::vector<float>() );
 
    Handle< std::vector<pat::PackedCandidate> > pfCands;
    iEvent.getByToken(pfCandsToken_, pfCands);
@@ -752,8 +744,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	
 
-	h_preBoostJet->Reset();
-	h_postBoostJet->Reset();
 
 	
 	std::vector<TLorentzVector> particles_jet;
@@ -832,7 +822,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		if (daughtersOfJet[i]->pt() > 1.0) qxptsum += daughtersOfJet[i]->charge() * pow( daughtersOfJet[i]->pt(), 0.6);//(ijetVect) ;
 		
 
-		h_preBoostJet->Fill(thisParticleLV_jet.Eta(), thisParticleLV_jet.Phi(), thisParticleLV_jet.E());
 
 
 
@@ -901,7 +890,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		particles3_H.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z(), thisParticleLV_H.T()     ) ));
 
 		
-		h_postBoostJet->Fill(thisParticleLV_jet.Eta(), thisParticleLV_jet.Phi(), thisParticleLV_jet.E() );
 		
 
 
@@ -911,9 +899,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	float jetq = qxptsum / ptsum;
 	qV->push_back(jetq);
 
-	outfile->cd();
-	//h_preBoostJet->Write(Form("pre_%d", count));
-	//h_postBoostJet->Write(Form("post_%d", count));
 
 
 
@@ -1294,7 +1279,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
-	jetTree->Fill();
+	//jetTree->Fill();
 
 	
 
@@ -1304,91 +1289,91 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
-   iEvent.put( fw_moments_0, "FWmoment0");
-   iEvent.put( fw_moments_1, "FWmoment1");
-   iEvent.put( fw_moments_2, "FWmoment2");
-   iEvent.put( fw_moments_3, "FWmoment3");
-   iEvent.put( fw_moments_4, "FWmoment4");
-   iEvent.put( sumPztop, "sumPztop");
-   iEvent.put( sumPzW, "sumPzW");
-   iEvent.put( sumPzZ, "sumPzZ");
-   iEvent.put( sumPzH, "sumPzH");
-   iEvent.put( sumPzjet, "sumPzjet");
-   iEvent.put( sumPtop, "sumPtop");
-   iEvent.put( sumPW, "sumPW");
-   iEvent.put( sumPZ, "sumPZ");
-   iEvent.put( sumPH, "sumPH");
-   iEvent.put( sumPjet, "sumPjet");
-   iEvent.put( Njetstop, "Njetstop");
-   iEvent.put( NjetsW, "NjetsW");
-   iEvent.put( NjetsZ, "NjetsZ");
-   iEvent.put( NjetsH, "NjetsH");
-   iEvent.put( Njetsjet, "Njetsjet");
-   iEvent.put( fw_moments_1_top, "FWmoment1top");
-   iEvent.put( fw_moments_2_top, "FWmoment2top");
-   iEvent.put( fw_moments_3_top, "FWmoment3top");
-   iEvent.put( fw_moments_4_top, "FWmoment4top");
-   iEvent.put( isotropy_top, "isotropytop");
-   iEvent.put( sphericity_top, "sphericitytop");
-   iEvent.put( aplanarity_top, "aplanaritytop");
-   iEvent.put( thrust_top, "thrusttop");
-   iEvent.put( fw_moments_1_W, "FWmoment1W");
-   iEvent.put( fw_moments_2_W, "FWmoment2W");
-   iEvent.put( fw_moments_3_W, "FWmoment3W");
-   iEvent.put( fw_moments_4_W, "FWmoment4W");
-   iEvent.put( isotropy_W, "isotropyW");
-   iEvent.put( sphericity_W, "sphericityW");
-   iEvent.put( aplanarity_W, "aplanarityW");
-   iEvent.put( thrust_W, "thrustW");
-   iEvent.put( fw_moments_1_Z, "FWmoment1Z");
-   iEvent.put( fw_moments_2_Z, "FWmoment2Z");
-   iEvent.put( fw_moments_3_Z, "FWmoment3Z");
-   iEvent.put( fw_moments_4_Z, "FWmoment4Z");
-   iEvent.put( isotropy_Z, "isotropyZ");
-   iEvent.put( sphericity_Z, "sphericityZ");
-   iEvent.put( aplanarity_Z, "aplanarityZ");
-   iEvent.put( thrust_Z, "thrustZ");
-   iEvent.put( fw_moments_1_H, "FWmoment1H");
-   iEvent.put( fw_moments_2_H, "FWmoment2H");
-   iEvent.put( fw_moments_3_H, "FWmoment3H");
-   iEvent.put( fw_moments_4_H, "FWmoment4H");
-   iEvent.put( isotropy_H, "isotropyH");
-   iEvent.put( sphericity_H, "sphericityH");
-   iEvent.put( aplanarity_H, "aplanarityH");
-   iEvent.put( thrust_H, "thrustH");
-   iEvent.put( et, "et");
-   iEvent.put( eta, "eta");
-   iEvent.put( mass, "mass");
-   iEvent.put( SDmass, "SDmass");
-   iEvent.put( tau32V, "tau32");
-   iEvent.put( tau21V, "tau21");
-   iEvent.put( bDiscV, "bDisc");
-   iEvent.put( bDisc1V, "bDisc1");
-   iEvent.put( bDisc2V, "bDisc2");
-   iEvent.put( vertV, "nPV");
-   iEvent.put( decayModeV, "decayMode");
-   iEvent.put( nAK4JetsV, "nAK4Jets");
-   iEvent.put( savedJetsV, "savedJets");
-   iEvent.put( qV, "q");
-   iEvent.put( m12_H, "m12H"); 
-   iEvent.put( m23_H, "m23H"); 
-   iEvent.put( m13_H, "m13H"); 
-   iEvent.put( m1234_H, "m1234H"); 
-   iEvent.put( m12_W, "m12W"); 
-   iEvent.put( m23_W, "m23W"); 
-   iEvent.put( m13_W, "m13W"); 
-   iEvent.put( m1234_W, "m1234W"); 
-   iEvent.put( m12_Z, "m12Z"); 
-   iEvent.put( m23_Z, "m23Z"); 
-   iEvent.put( m13_Z, "m13Z"); 
-   iEvent.put( m1234_Z, "m1234Z"); 
-   iEvent.put( m12_top, "m12top"); 
-   iEvent.put( m23_top, "m23top"); 
-   iEvent.put( m13_top, "m13top"); 
-   iEvent.put( m1234_top, "m1234top"); 
-   iEvent.put( genPt, "genPt");
-   iEvent.put( dRjetParticle, "dRjetParticle");
-   iEvent.put( topSize, "topSize");
+   iEvent.put( std::move(fw_moments_0), "FWmoment0");
+   iEvent.put( std::move( fw_moments_1), "FWmoment1");
+   iEvent.put( std::move( fw_moments_2), "FWmoment2");
+   iEvent.put( std::move( fw_moments_3), "FWmoment3");
+   iEvent.put( std::move( fw_moments_4), "FWmoment4");
+   iEvent.put( std::move( sumPztop), "sumPztop");
+   iEvent.put( std::move( sumPzW), "sumPzW");
+   iEvent.put( std::move( sumPzZ), "sumPzZ");
+   iEvent.put( std::move( sumPzH), "sumPzH");
+   iEvent.put( std::move( sumPzjet), "sumPzjet");
+   iEvent.put( std::move( sumPtop), "sumPtop");
+   iEvent.put( std::move( sumPW), "sumPW");
+   iEvent.put( std::move( sumPZ), "sumPZ");
+   iEvent.put( std::move( sumPH), "sumPH");
+   iEvent.put( std::move( sumPjet), "sumPjet");
+   iEvent.put( std::move( Njetstop), "Njetstop");
+   iEvent.put( std::move( NjetsW), "NjetsW");
+   iEvent.put( std::move( NjetsZ), "NjetsZ");
+   iEvent.put( std::move( NjetsH), "NjetsH");
+   iEvent.put( std::move( Njetsjet), "Njetsjet");
+   iEvent.put( std::move( fw_moments_1_top), "FWmoment1top");
+   iEvent.put( std::move( fw_moments_2_top), "FWmoment2top");
+   iEvent.put( std::move( fw_moments_3_top), "FWmoment3top");
+   iEvent.put( std::move( fw_moments_4_top), "FWmoment4top");
+   iEvent.put( std::move( isotropy_top), "isotropytop");
+   iEvent.put( std::move( sphericity_top), "sphericitytop");
+   iEvent.put( std::move( aplanarity_top), "aplanaritytop");
+   iEvent.put( std::move( thrust_top), "thrusttop");
+   iEvent.put( std::move( fw_moments_1_W), "FWmoment1W");
+   iEvent.put( std::move( fw_moments_2_W), "FWmoment2W");
+   iEvent.put( std::move( fw_moments_3_W), "FWmoment3W");
+   iEvent.put( std::move( fw_moments_4_W), "FWmoment4W");
+   iEvent.put( std::move( isotropy_W), "isotropyW");
+   iEvent.put( std::move( sphericity_W), "sphericityW");
+   iEvent.put( std::move( aplanarity_W), "aplanarityW");
+   iEvent.put( std::move( thrust_W), "thrustW");
+   iEvent.put( std::move( fw_moments_1_Z), "FWmoment1Z");
+   iEvent.put( std::move( fw_moments_2_Z), "FWmoment2Z");
+   iEvent.put( std::move( fw_moments_3_Z), "FWmoment3Z");
+   iEvent.put( std::move( fw_moments_4_Z), "FWmoment4Z");
+   iEvent.put( std::move( isotropy_Z), "isotropyZ");
+   iEvent.put( std::move( sphericity_Z), "sphericityZ");
+   iEvent.put( std::move( aplanarity_Z), "aplanarityZ");
+   iEvent.put( std::move( thrust_Z), "thrustZ");
+   iEvent.put( std::move( fw_moments_1_H), "FWmoment1H");
+   iEvent.put( std::move( fw_moments_2_H), "FWmoment2H");
+   iEvent.put( std::move( fw_moments_3_H), "FWmoment3H");
+   iEvent.put( std::move( fw_moments_4_H), "FWmoment4H");
+   iEvent.put( std::move( isotropy_H), "isotropyH");
+   iEvent.put( std::move( sphericity_H), "sphericityH");
+   iEvent.put( std::move( aplanarity_H), "aplanarityH");
+   iEvent.put( std::move( thrust_H), "thrustH");
+   iEvent.put( std::move( et), "et");
+   iEvent.put( std::move( eta), "eta");
+   iEvent.put( std::move( mass), "mass");
+   iEvent.put( std::move( SDmass), "SDmass");
+   iEvent.put( std::move( tau32V), "tau32");
+   iEvent.put( std::move( tau21V), "tau21");
+   iEvent.put( std::move( bDiscV), "bDisc");
+   iEvent.put( std::move( bDisc1V), "bDisc1");
+   iEvent.put( std::move( bDisc2V), "bDisc2");
+   iEvent.put( std::move( vertV), "nPV");
+   iEvent.put( std::move( decayModeV), "decayMode");
+   iEvent.put( std::move( nAK4JetsV), "nAK4Jets");
+   iEvent.put( std::move( savedJetsV), "savedJets");
+   iEvent.put( std::move( qV), "q");
+   iEvent.put( std::move( m12_H), "m12H"); 
+   iEvent.put( std::move( m23_H), "m23H"); 
+   iEvent.put( std::move( m13_H), "m13H"); 
+   iEvent.put( std::move( m1234_H), "m1234H"); 
+   iEvent.put( std::move( m12_W), "m12W"); 
+   iEvent.put( std::move( m23_W), "m23W"); 
+   iEvent.put( std::move( m13_W), "m13W"); 
+   iEvent.put( std::move( m1234_W), "m1234W"); 
+   iEvent.put( std::move( m12_Z), "m12Z"); 
+   iEvent.put( std::move( m23_Z), "m23Z"); 
+   iEvent.put( std::move( m13_Z), "m13Z"); 
+   iEvent.put( std::move( m1234_Z), "m1234Z"); 
+   iEvent.put( std::move( m12_top), "m12top"); 
+   iEvent.put( std::move( m23_top), "m23top"); 
+   iEvent.put( std::move( m13_top), "m13top"); 
+   iEvent.put( std::move( m1234_top), "m1234top"); 
+   iEvent.put( std::move( genPt), "genPt");
+   iEvent.put( std::move( dRjetParticle), "dRjetParticle");
+   iEvent.put( std::move( topSize), "topSize");
 
 }
 // ------------ method called once each stream before processing any runs, lumis or events  ------------
