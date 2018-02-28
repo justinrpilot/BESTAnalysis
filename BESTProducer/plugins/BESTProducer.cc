@@ -76,12 +76,9 @@ class BESTProducer : public edm::stream::EDProducer<> {
       int FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
       void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );	
 
-      TFile *outfile;
-      TH2F *h_preBoostJet;
-      TH2F *h_postBoostJet;
       
 
-      TTree *jetTree;
+      //TTree *jetTree;
 
 
 
@@ -227,15 +224,11 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    produces<std::vector<float > > ("dRjetParticle");
    produces<std::vector<float > > ("topSize");
 
-   edm::Service<TFileService> fs;
-   h_preBoostJet = fs->make<TH2F>("h_preBoostJet", "h_preBoostJet", 50, -3, 3, 50, -3.5, 3.5);
-   h_postBoostJet = fs->make<TH2F>("h_postBoostJet", "h_postBoostJet", 50, -3, 3, 50, -3.5, 3.5);
+   //edm::Service<TFileService> fs;
    count = 0;
-   outfile = new TFile("jetPictures.root", "RECREATE"); 
-   outfile->cd();
    
 
-   jetTree = fs->make<TTree>("jetTree", "jetTree");
+   //jetTree = fs->make<TTree>("jetTree", "jetTree");
 
 
    listOfVars.push_back("et"); 
@@ -349,7 +342,7 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
 
         treeVars[ listOfVars[i] ] = -999.99;
 
-        jetTree->Branch( (listOfVars[i]).c_str() , &(treeVars[ listOfVars[i] ]), (listOfVars[i]+"/F").c_str() );
+        //jetTree->Branch( (listOfVars[i]).c_str() , &(treeVars[ listOfVars[i] ]), (listOfVars[i]+"/F").c_str() );
 
    }
 
@@ -399,8 +392,6 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
 
 BESTProducer::~BESTProducer()
 {
-   outfile->Write();
-   outfile->Close(); 
    // do anything here that needs to be done at destruction time
    // (e.g. close files, deallocate resources etc.)
 
@@ -689,7 +680,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	nJets++;
 	if (isMC_ && doMatch_) { if (!match) continue; }
-	if (ijet->pt() < 200) continue;
+	if (ijet->pt() < 350) continue;
 
 
 	auto const & thisSubjets = ijet->subjets();
@@ -752,8 +743,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	
 
-	h_preBoostJet->Reset();
-	h_postBoostJet->Reset();
 
 	
 	std::vector<TLorentzVector> particles_jet;
@@ -832,7 +821,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		if (daughtersOfJet[i]->pt() > 1.0) qxptsum += daughtersOfJet[i]->charge() * pow( daughtersOfJet[i]->pt(), 0.6);//(ijetVect) ;
 		
 
-		h_preBoostJet->Fill(thisParticleLV_jet.Eta(), thisParticleLV_jet.Phi(), thisParticleLV_jet.E());
 
 
 
@@ -901,7 +889,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		particles3_H.push_back( reco::LeafCandidate(+1, reco::Candidate::LorentzVector( thisParticleLV_H.X(), thisParticleLV_H.Y(), thisParticleLV_H.Z(), thisParticleLV_H.T()     ) ));
 
 		
-		h_postBoostJet->Fill(thisParticleLV_jet.Eta(), thisParticleLV_jet.Phi(), thisParticleLV_jet.E() );
 		
 
 
@@ -911,9 +898,6 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	float jetq = qxptsum / ptsum;
 	qV->push_back(jetq);
 
-	outfile->cd();
-	//h_preBoostJet->Write(Form("pre_%d", count));
-	//h_postBoostJet->Write(Form("post_%d", count));
 
 
 
@@ -1294,7 +1278,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
-	jetTree->Fill();
+	//jetTree->Fill();
 
 	
 
