@@ -219,6 +219,8 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    produces<std::vector<int > > ("nPV");
    produces<std::vector<int > > ("nAK4Jets");
    produces<std::vector<float > >("q");
+   produces<std::vector<float > >("qsubjet0");
+   produces<std::vector<float > >("qsubjet1");
    produces<std::vector<int > >("decayMode");
    produces<std::vector<pat::Jet > >("savedJets");
    produces<std::vector<float > >("genPt");
@@ -499,6 +501,8 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::unique_ptr< std::vector<int > > vertV( new std::vector<int>() );
    std::unique_ptr< std::vector<int > > nAK4JetsV( new std::vector<int>() );
    std::unique_ptr< std::vector<float > > qV(new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > qsubjet0V(new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > qsubjet1V(new std::vector<float>() );
    std::unique_ptr< std::vector<int > > decayModeV( new std::vector<int>() ) ;
    std::unique_ptr< std::vector<pat::Jet > > savedJetsV( new std::vector<pat::Jet>() );
 
@@ -788,15 +792,25 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	vector<reco::Candidate * > daughtersOfJet;
 
 
+		
+	float qxptsum_0 = 0.0;
+	float ptsum_0 = pow(ijet->daughter(0)->pt(), 0.6);
+	float qxptsum_1 = 0.0;
+	float ptsum_1 = pow(ijet->daughter(1)->pt(), 0.6);
+
 	for (unsigned int i = 0; i < ijet->daughter(0)->numberOfDaughters(); i++){
 	
 		daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(0)->daughter(i) );
+		if (ijet->daughter(0)->daughter(i)->pt() > 1.0) qxptsum_0 += ijet->daughter(0)->daughter(i)->charge() * pow( ijet->daughter(0)->daughter(i)->pt(), 0.6);
 	}
 
+	qsubjet0V->push_back(qxptsum_0 /ptsum_0);
 	for (unsigned int i = 0; i < ijet->daughter(1)->numberOfDaughters(); i++){
 
 		daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(1)->daughter(i));
+		if (ijet->daughter(1)->daughter(i)->pt() > 1.0) qxptsum_1 += ijet->daughter(1)->daughter(i)->charge() * pow( ijet->daughter(1)->daughter(i)->pt(), 0.6);
 	}
+	qsubjet1V->push_back(qxptsum_1 /ptsum_1);
 	for (unsigned int i = 2; i< ijet->numberOfDaughters(); i++){
 
 		daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(i) );
@@ -1355,6 +1369,8 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put( std::move( nAK4JetsV), "nAK4Jets");
    iEvent.put( std::move( savedJetsV), "savedJets");
    iEvent.put( std::move( qV), "q");
+   iEvent.put( std::move( qsubjet0V), "qsubjet0");
+   iEvent.put( std::move( qsubjet1V), "qsubjet1");
    iEvent.put( std::move( m12_H), "m12H"); 
    iEvent.put( std::move( m23_H), "m23H"); 
    iEvent.put( std::move( m13_H), "m13H"); 
