@@ -4,4 +4,7 @@
 <use name="ROOT"/>
 <use name="clhep"/>
 <use name="roottmva"/>
+<use name="PhysicsTools/UtilAlgos"/>
+<use name="PhysicsTools/CandUtils"/>
+<use name="FWCore/ServiceRegistry"/>
 <flags EDM_PLUGIN="1"/>
