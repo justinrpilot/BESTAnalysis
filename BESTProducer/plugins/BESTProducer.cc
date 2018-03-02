@@ -685,7 +685,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	nJets++;
 	if (isMC_ && doMatch_) { if (!match) continue; }
-	if (ijet->pt() < 200) continue;
+	if (ijet->pt() < 350) continue;
 
 
 	auto const & thisSubjets = ijet->subjets();
