@@ -194,12 +194,12 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    produces<std::vector<float > >("et");
    produces<std::vector<float > >("eta");
    produces<std::vector<float > >("mass");
-   produces<std::vector<float > >("SDmass");
+   produces<std::vector<float > >("AK8SDmass");
    produces<std::vector<float > >("tau32");
    produces<std::vector<float > >("tau21");
    produces<std::vector<float > >("bDisc");
-   produces<std::vector<float > >("bDisc1");
-   produces<std::vector<float > >("bDisc2");
+   produces<std::vector<float > >("AK8subjet0bDisc");
+   produces<std::vector<float > >("AK8subjet1bDisc");
    produces<std::vector<float > >("m12H");
    produces<std::vector<float > >("m23H");
    produces<std::vector<float > >("m13H");
@@ -218,9 +218,13 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    produces<std::vector<float > >("m1234top");
    produces<std::vector<int > > ("nPV");
    produces<std::vector<int > > ("nAK4Jets");
-   produces<std::vector<float > >("q");
-   produces<std::vector<float > >("qsubjet0");
-   produces<std::vector<float > >("qsubjet1");
+   produces<std::vector<float > >("AK8charge");
+   produces<std::vector<float > >("AK8subjet0charge");
+   produces<std::vector<float > >("AK8subjet1charge");
+   produces<std::vector<float > >("AK8subjet0pT");
+   produces<std::vector<float > >("AK8subjet1pT");
+   produces<std::vector<float > >("AK8subjet0mass");
+   produces<std::vector<float > >("AK8subjet1mass");
    produces<std::vector<int > >("decayMode");
    produces<std::vector<pat::Jet > >("savedJets");
    produces<std::vector<float > >("genPt");
@@ -237,7 +241,7 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("et"); 
    listOfVars.push_back("eta"); 
    listOfVars.push_back("mass");
-   listOfVars.push_back("SDmass");
+   listOfVars.push_back("AK8SDmass");
    listOfVars.push_back("tau32");
    listOfVars.push_back("tau21");
    listOfVars.push_back("h1_top"); 
@@ -283,8 +287,8 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("Njets_jet");
    listOfVars.push_back("Njets_orig");
    listOfVars.push_back("bDisc"); 
-   listOfVars.push_back("bDisc1"); 
-   listOfVars.push_back("bDisc2"); 
+   listOfVars.push_back("AK8subjet0bDisc"); 
+   listOfVars.push_back("AK8subjet1bDisc"); 
    listOfVars.push_back("sumPz_top");
    listOfVars.push_back("sumPz_W");
    listOfVars.push_back("sumPz_Z");
@@ -296,7 +300,7 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("sumP_H");
    listOfVars.push_back("sumP_jet");
    listOfVars.push_back("npv");
-   listOfVars.push_back("q");
+   listOfVars.push_back("AK8charge");
    listOfVars.push_back("gen_pt");
    listOfVars.push_back("gen_size");
    listOfVars.push_back("dR_gen_jet");
@@ -503,6 +507,10 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::unique_ptr< std::vector<float > > qV(new std::vector<float>() );
    std::unique_ptr< std::vector<float > > qsubjet0V(new std::vector<float>() );
    std::unique_ptr< std::vector<float > > qsubjet1V(new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > pTsubjet0V(new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > pTsubjet1V(new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > masssubjet0V(new std::vector<float>() );
+   std::unique_ptr< std::vector<float > > masssubjet1V(new std::vector<float>() );
    std::unique_ptr< std::vector<int > > decayModeV( new std::vector<int>() ) ;
    std::unique_ptr< std::vector<pat::Jet > > savedJetsV( new std::vector<pat::Jet>() );
 
@@ -713,14 +721,14 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	fourv thisJet = ijet->polarP4();
 
 	treeVars["bDisc"] = max( btagValue1, btagValue2 );
-	treeVars["bDisc1"] = btagValue1;
-	treeVars["bDisc2"] = btagValue2;
+	treeVars["AK8subjet0bDisc"] = btagValue1;
+	treeVars["AK8subjet1bDisc"] = btagValue2;
 
 
 	treeVars["et"] = thisJet.Pt();
 	treeVars["eta"] = thisJet.Rapidity();
 	treeVars["mass"] = thisJet.M();
-	treeVars["SDmass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+	treeVars["AK8SDmass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
 
 	treeVars["tau32"] = tau32;
 	treeVars["tau21"] = tau21;
@@ -797,6 +805,11 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	float ptsum_0 = pow(ijet->daughter(0)->pt(), 0.6);
 	float qxptsum_1 = 0.0;
 	float ptsum_1 = pow(ijet->daughter(1)->pt(), 0.6);
+
+	pTsubjet0V->push_back( ijet->daughter(0)->pt() );
+	pTsubjet1V->push_back( ijet->daughter(1)->pt() );
+	masssubjet0V->push_back( ijet->daughter(0)->mass() );
+	masssubjet1V->push_back( ijet->daughter(1)->mass() );
 
 	for (unsigned int i = 0; i < ijet->daughter(0)->numberOfDaughters(); i++){
 	
@@ -1149,7 +1162,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	treeVars["m13_H"] = m13LV_H.M();
 
 
-	treeVars["q"] = jetq;
+	treeVars["AK8charge"] = jetq;
 	treeVars["sumPz_top"] = sumPz[0];
 	treeVars["sumPz_W"] = sumPz[1];
 	treeVars["sumPz_Z"] = sumPz[2];
@@ -1260,12 +1273,12 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    et->push_back( treeVars["et"]);
    eta->push_back( treeVars["eta"]);
    mass->push_back( treeVars["mass"]);
-   SDmass->push_back( treeVars["SDmass"]);
+   SDmass->push_back( treeVars["AK8SDmass"]);
    tau32V->push_back( treeVars["tau32"]);
    tau21V->push_back( treeVars["tau21"]);
    bDiscV->push_back( treeVars["bDisc"]);
-   bDisc1V->push_back( treeVars["bDisc1"]);
-   bDisc2V->push_back( treeVars["bDisc2"]);
+   bDisc1V->push_back( treeVars["AK8subjet0bDisc"]);
+   bDisc2V->push_back( treeVars["AK8subjet1bDisc"]);
    m12_H->push_back( treeVars["m12_H"]);
    m23_H->push_back( treeVars["m23_H"]);
    m13_H->push_back( treeVars["m13_H"]);
@@ -1358,19 +1371,23 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put( std::move( et), "et");
    iEvent.put( std::move( eta), "eta");
    iEvent.put( std::move( mass), "mass");
-   iEvent.put( std::move( SDmass), "SDmass");
+   iEvent.put( std::move( SDmass), "AK8SDmass");
    iEvent.put( std::move( tau32V), "tau32");
    iEvent.put( std::move( tau21V), "tau21");
    iEvent.put( std::move( bDiscV), "bDisc");
-   iEvent.put( std::move( bDisc1V), "bDisc1");
-   iEvent.put( std::move( bDisc2V), "bDisc2");
+   iEvent.put( std::move( bDisc1V), "AK8subjet0bDisc");
+   iEvent.put( std::move( bDisc2V), "AK8subjet1bDisc");
    iEvent.put( std::move( vertV), "nPV");
    iEvent.put( std::move( decayModeV), "decayMode");
    iEvent.put( std::move( nAK4JetsV), "nAK4Jets");
    iEvent.put( std::move( savedJetsV), "savedJets");
-   iEvent.put( std::move( qV), "q");
-   iEvent.put( std::move( qsubjet0V), "qsubjet0");
-   iEvent.put( std::move( qsubjet1V), "qsubjet1");
+   iEvent.put( std::move( qV), "AK8charge");
+   iEvent.put( std::move( qsubjet0V), "AK8subjet0charge");
+   iEvent.put( std::move( qsubjet1V), "AK8subjet1charge");
+   iEvent.put( std::move( pTsubjet0V), "AK8subjet0pT");
+   iEvent.put( std::move( pTsubjet1V), "AK8subjet1pT");
+   iEvent.put( std::move( masssubjet0V), "AK8subjet0mass");
+   iEvent.put( std::move( masssubjet1V), "AK8subjet1mass");
    iEvent.put( std::move( m12_H), "m12H"); 
    iEvent.put( std::move( m23_H), "m23H"); 
    iEvent.put( std::move( m13_H), "m13H"); 
