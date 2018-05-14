@@ -11,7 +11,7 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
 
 
-	'root://cms-xrd-global.cern.ch//store/data/Run2016B/JetHT/MINIAOD/01Jul2016-v1/00000/085E58F6-A544-E611-BB10-00A0D1EC7FB8.root'
+	'/store/data/Run2017F/JetHT/MINIAOD/17Nov2017-v1/50000/008FD280-8BDF-E711-A06C-008CFA111200.root'
 
 	)
 )
@@ -21,7 +21,8 @@ process.run = cms.EDProducer('BESTProducer',
 	pdgIDforMatch = cms.int32(24),
 	NNtargetX = cms.int32(0),
 	NNtargetY = cms.int32(1),
-	isMC = cms.int32(0)
+	isMC = cms.int32(0),
+	doMatch = cms.int32(0)
 )
 
 process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_DATA.root") )
@@ -30,8 +31,9 @@ process.out = cms.OutputModule("PoolOutputModule",
                                fileName = cms.untracked.string("ana_out.root"),
                                SelectEvents   = cms.untracked.PSet( SelectEvents = cms.vstring('p') ),
                                outputCommands = cms.untracked.vstring('drop *',
-                                                                      'keep *_*run*_*_*'
-                                                                      #, 'keep *_goodPatJetsCATopTagPF_*_*'
+                                                                      'keep *_*run*_*_*',
+                                                                      'keep *_*fixedGridRhoAll*_*_*',
+								      #, 'keep *_goodPatJetsCATopTagPF_*_*'
                                                                       #, 'keep recoPFJets_*_*_*'
                                                                       ) 
                                )
