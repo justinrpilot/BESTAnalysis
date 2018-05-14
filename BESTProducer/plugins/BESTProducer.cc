@@ -370,13 +370,13 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
    trigResultsTag_ = edm::InputTag("TriggerResults", "", "PAT");
    }
    else {
-   pfCandsTag_ = edm::InputTag("packedPFCandidates", "", "PAT");
-   ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
-   ak4JetsTag_ = edm::InputTag("slimmedJets", "", "PAT");
-   genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
-   ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "PAT");
-   verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
-   trigResultsTag_ = edm::InputTag("TriggerResults", "", "PAT");
+   pfCandsTag_ = edm::InputTag("packedPFCandidates", "", "RECO");
+   ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "RECO");
+   ak4JetsTag_ = edm::InputTag("slimmedJets", "", "RECO");
+   genPartTag_ = edm::InputTag("prunedGenParticles", "", "RECO");
+   ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "RECO");
+   verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "RECO");
+   trigResultsTag_ = edm::InputTag("TriggerResults", "", "HLT");
    }
    
 
@@ -700,9 +700,9 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	
 
 
-	float tau3 = ijet->userFloat("NjettinessAK8:tau3");
-	float tau2 = ijet->userFloat("NjettinessAK8:tau2");
-	float tau1 = ijet->userFloat("NjettinessAK8:tau1");
+	float tau3 = ijet->userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau3");
+	float tau2 = ijet->userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau2");
+	float tau1 = ijet->userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau1");
 	float tau32 = tau3/tau2;
 	float tau21 = tau2/tau1;
 
@@ -720,7 +720,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	treeVars["et"] = thisJet.Pt();
 	treeVars["eta"] = thisJet.Rapidity();
 	treeVars["mass"] = thisJet.M();
-	treeVars["SDmass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+	treeVars["SDmass"] = ijet->userFloat("ak8PFJetsCHSValueMap:ak8PFJetsCHSSoftDropMass");
 
 	treeVars["tau32"] = tau32;
 	treeVars["tau21"] = tau21;
