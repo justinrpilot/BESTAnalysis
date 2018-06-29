@@ -143,7 +143,7 @@ First, checkout `lwtnn` following the instructions
 [here](https://github.com/demarley/lwtnn/tree/CMSSW_8_0_X-compatible#cmssw-compatibility).  
 Then:
 ```
-git clone https://github.com/demarley/BESTAnalysis.git 
+git clone https://github.com/cms-ttbarAC/BESTAnalysis.git 
 cd BESTAnalysis
 git checkout sklearn-lwtnn-interface
 cd BoostedEventShapeTagger
