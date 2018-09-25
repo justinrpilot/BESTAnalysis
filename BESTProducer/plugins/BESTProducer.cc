@@ -39,6 +39,9 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "PhysicsTools/CandUtils/interface/EventShapeVariables.h"
 #include "PhysicsTools/CandUtils/interface/Thrust.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHEEventProduct.h"
+#include "SimDataFormats/GeneratorProducts/interface/LHERunInfoProduct.h"
 #include <fastjet/JetDefinition.hh>
 #include <fastjet/PseudoJet.hh>
 #include "fastjet/tools/Filter.hh"
@@ -75,7 +78,8 @@ class BESTProducer : public edm::stream::EDProducer<> {
       float LegP(float x, int order);
       int FWMoments( std::vector<TLorentzVector> particles, double (&outputs)[5] );
       void pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo );	
-
+      void beginRun(edm::Run const& iRun, edm::EventSetup const&);
+      void endRun(edm::Run const& iRun, edm::EventSetup const&);
       TFile *outfile;
       TH2F *h_preBoostJet;
       TH2F *h_postBoostJet;
@@ -94,12 +98,17 @@ class BESTProducer : public edm::stream::EDProducer<> {
         int NNtargetX_;
         int NNtargetY_;
 	int isMC_;
+	std::string inputJetColl_;
 	int doMatch_;
-   
+        int usePuppi_;   
+
 	edm::EDGetTokenT<std::vector<pat::PackedCandidate> > pfCandsToken_;
 	edm::EDGetTokenT<std::vector<pat::Jet> > ak8JetsToken_;
 	edm::EDGetTokenT<std::vector<pat::Jet> > ak4JetsToken_;
 	edm::EDGetTokenT<std::vector<reco::GenParticle> > genPartToken_;
+        edm::EDGetTokenT<LHERunInfoProduct > lheToken_;
+        edm::EDGetTokenT<LHEEventProduct > lheEventToken_;
+	edm::EDGetTokenT<GenEventInfoProduct> genInfoToken_;
 
 	edm::EDGetTokenT<std::vector<pat::Jet> > ak8CHSSoftDropSubjetsToken_;
 	edm::EDGetTokenT<std::vector<reco::Vertex> > verticesToken_;
@@ -128,7 +137,9 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    NNtargetX_  (iConfig.getParameter<int>("NNtargetX")),
    NNtargetY_  (iConfig.getParameter<int>("NNtargetY")),
    isMC_ (iConfig.getParameter<int>("isMC")),
-   doMatch_ (iConfig.getParameter<int>("doMatch"))
+   inputJetColl_ (iConfig.getParameter<std::string>("inputJetColl")),
+   doMatch_ (iConfig.getParameter<int>("doMatch")),
+   usePuppi_ (iConfig.getParameter<int>("usePuppi"))
 {
    //register your products
 /* Examples
@@ -224,8 +235,17 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    produces<std::vector<int > >("decayMode");
    produces<std::vector<pat::Jet > >("savedJets");
    produces<std::vector<float > >("genPt");
+   produces<std::vector<float > >("genJetPt");
    produces<std::vector<float > > ("dRjetParticle");
    produces<std::vector<float > > ("topSize");
+   produces<std::vector<float > > ("muRFweights");
+   produces<std::vector<float > > ("PDFweights");
+   produces<std::vector<int > > ("isB");
+   produces<std::vector<int > > ("isT");
+   produces<std::vector<int > > ("isW");
+   produces<std::vector<int > > ("isZ");
+   produces<std::vector<int > > ("isH");
+
 
    edm::Service<TFileService> fs;
    h_preBoostJet = fs->make<TH2F>("h_preBoostJet", "h_preBoostJet", 50, -3, 3, 50, -3.5, 3.5);
@@ -344,6 +364,12 @@ BESTProducer::BESTProducer(const edm::ParameterSet& iConfig):
    listOfVars.push_back("m13_H");
    listOfVars.push_back("m23_H");
    listOfVars.push_back("m1234_H");
+   listOfVars.push_back("isB");
+   listOfVars.push_back("isT");
+   listOfVars.push_back("isW");
+   listOfVars.push_back("isZ");
+   listOfVars.push_back("isH");
+
 
 for (unsigned i = 0; i < listOfVars.size(); i++){
 
@@ -363,24 +389,32 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
    edm::InputTag ak8subjetsTag_;
    edm::InputTag verticesTag_;
    edm::InputTag trigResultsTag_;
+   edm::InputTag lheTag_;
+   edm::InputTag genInfoTag_;
+   lheTag_ = edm::InputTag("externalLHEProducer", "", "LHE"); 
+   //edm::InputTag lheEventTag_;
+   //lheEventTag_ = edm::InputTag("externalLHEProducer", "", "LHE");
+   ak8JetsTag_ = edm::InputTag(inputJetColl_, "", "run");
+   genInfoTag_ = edm::InputTag("generator");
 
    if (isMC_){
    pfCandsTag_ = edm::InputTag("packedPFCandidates", "", "PAT");
-   ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
+   //ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
    ak4JetsTag_ = edm::InputTag("slimmedJets", "", "PAT");
    genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
-   ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "PAT");
+   //ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "PAT");
+   ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFPuppiSoftDropPacked","SubJets", "PAT");
    verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
-   trigResultsTag_ = edm::InputTag("TriggerResults", "", "PAT");
+   trigResultsTag_ = edm::InputTag("TriggerResults", "", "HLT");
    }
    else {
    pfCandsTag_ = edm::InputTag("packedPFCandidates", "", "PAT");
-   ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
+   //ak8JetsTag_ = edm::InputTag("slimmedJetsAK8", "", "PAT");
    ak4JetsTag_ = edm::InputTag("slimmedJets", "", "PAT");
    genPartTag_ = edm::InputTag("prunedGenParticles", "", "PAT");
    ak8subjetsTag_ = edm::InputTag("slimmedJetsAK8PFCHSSoftDropPacked","SubJets", "PAT");
    verticesTag_ = edm::InputTag("offlineSlimmedPrimaryVertices", "", "PAT");
-   trigResultsTag_ = edm::InputTag("TriggerResults", "", "PAT");
+   trigResultsTag_ = edm::InputTag("TriggerResults", "", "HLT");
    }
    
 
@@ -392,7 +426,10 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
    ak8CHSSoftDropSubjetsToken_ = consumes<std::vector<pat::Jet> >( ak8subjetsTag_ );
    verticesToken_ = consumes<std::vector<reco::Vertex> >(verticesTag_);
    trigResultsToken_ = consumes<edm::TriggerResults>(trigResultsTag_);
-   //BadChCandFilterToken_ = consumes<bool>(iConfig.getParameter<edm::InputTag>("BadChargedCandidateFilter"));
+   //lheToken_ = consumes<LHERunInfoProduct, edm::InRun >(lheTag_); 
+   //lheEventToken_ = consumes<LHEEventProduct >(lheEventTag_); 
+   genInfoToken_ = consumes<GenEventInfoProduct > (genInfoTag_); 
+    //BadChCandFilterToken_ = consumes<bool>(iConfig.getParameter<edm::InputTag>("BadChargedCandidateFilter"));
    //BadPFMuonFilterToken_ = consumes<bool>(iConfig.getParameter<edm::InputTag>("BadPFMuonFilter"));
 }
 
@@ -478,6 +515,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr< std::vector<float > > aplanarity_H( new std::vector<float>() );
    std::auto_ptr< std::vector<float > > thrust_H( new std::vector<float>() );
    std::auto_ptr< std::vector<float > > et( new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > genJetPt( new std::vector<float>() );
    std::auto_ptr< std::vector<float > > eta( new std::vector<float>() );
    std::auto_ptr< std::vector<float > > mass( new std::vector<float>() );
    std::auto_ptr< std::vector<float > > SDmass( new std::vector<float>() );
@@ -513,6 +551,15 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    std::auto_ptr< std::vector<float > > genPt(new std::vector<float>() );
    std::auto_ptr< std::vector<float > > dRjetParticle( new std::vector<float>() );
    std::auto_ptr< std::vector<float > > topSize(new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > muRFweights(new std::vector<float>() );
+   std::auto_ptr< std::vector<float > > PDFweights(new std::vector<float>() );
+
+   std::auto_ptr< std::vector<int > > isBv(new std::vector<int>() );
+   std::auto_ptr< std::vector<int > > isTv(new std::vector<int>() );
+   std::auto_ptr< std::vector<int > > isWv(new std::vector<int>() );
+   std::auto_ptr< std::vector<int > > isZv(new std::vector<int>() );
+   std::auto_ptr< std::vector<int > > isHv(new std::vector<int>() );
+
 
    Handle< std::vector<pat::PackedCandidate> > pfCands;
    iEvent.getByToken(pfCandsToken_, pfCands);
@@ -535,8 +582,29 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    Handle< edm::TriggerResults > trigResults;
    iEvent.getByToken(trigResultsToken_, trigResults);
 
+   //Handle< LHEEventProduct > lheEventResults;
+   //iEvent.getByToken(lheEventToken_, lheEventResults);
+
+   Handle< GenEventInfoProduct > genInfoResults;
+   iEvent.getByToken(genInfoToken_, genInfoResults);
+
+/*
+   float defGenWeight = lheEventResults->originalXWGTUP();
+   muRFweights->push_back( lheEventResults->weights()[1].wgt / defGenWeight );
+   muRFweights->push_back( lheEventResults->weights()[2].wgt / defGenWeight );
+   muRFweights->push_back( lheEventResults->weights()[3].wgt / defGenWeight );
+   muRFweights->push_back( lheEventResults->weights()[4].wgt / defGenWeight );
+   muRFweights->push_back( lheEventResults->weights()[6].wgt / defGenWeight );
+   muRFweights->push_back( lheEventResults->weights()[8].wgt / defGenWeight );
+
+   for (unsigned int i = 9; i < (9 + 100); i++){
+
+	PDFweights->push_back( lheEventResults->weights()[i].wgt / defGenWeight );
+   }
+*/
    vertV->push_back(vertices->size() );
    treeVars["npv"] = vertices->size();
+
 
    bool passFilters = 1;
 
@@ -551,10 +619,8 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    	if (thisName == "Flag_EcalDeadCellTriggerPrimitiveFilter" && !(*trigResults).accept(i)) passFilters = 0;
    	if (thisName == "Flag_eeBadScFilter" && !(*trigResults).accept(i)) passFilters = 0;
 
-	
-
+	//if (thisName == "HLT_PFHT900_v6" && !(*trigResults).accept(i)) passFilters = 0;
    }
-
 
 
 /*
@@ -572,11 +638,9 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
     if (!filterbadChCandidate) passFilters = 0;
     if (!filterbadPFMuon) passFilters = 0;
   */ 	
-    if (!passFilters) {
-	return;
-	}
 
    std::vector<TLorentzVector> genTops;
+   std::vector<reco::GenParticle> savedGenParticles; 
    if (isMC_){
 
    int decayMode = -999;
@@ -610,6 +674,22 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 		}	
 	}
+
+	if (ipart->pt() < 1.0) continue;
+	if (ipart->mother() != NULL) { if (abs(ipart->mother()->pdgId()) == 6) continue; }
+	if (ipart->mother() != NULL) { if (abs(ipart->mother()->pdgId()) == 25) continue; }
+	if (ipart->mother() != NULL) { if (abs(ipart->mother()->pdgId()) == 5) continue; }
+	if (ipart->mother() != NULL) { if (abs(ipart->mother()->pdgId()) == 23) continue; }
+	if (ipart->mother() != NULL) { if (abs(ipart->mother()->pdgId()) == 24) continue; }
+	if (abs(ipart->pdgId()) == 5 && ipart->status() > 20 && ipart->status() < 30) { savedGenParticles.push_back(*ipart); }
+	if (abs(ipart->pdgId()) == 6 && ipart->status() > 20 && ipart->status() < 30) { savedGenParticles.push_back(*ipart); } 
+	if (abs(ipart->pdgId()) == 23 && ipart->status() > 20 && ipart->status() < 30){ savedGenParticles.push_back(*ipart); } 
+	if (abs(ipart->pdgId()) == 24 && ipart->status() > 20 && ipart->status() < 30){ savedGenParticles.push_back(*ipart); } 
+	if (abs(ipart->pdgId()) == 25 && ipart->status() > 20 && ipart->status() < 30){ savedGenParticles.push_back(*ipart); } 
+	
+
+
+
 
 	//Check light jet
 	bool matchPDG = false;
@@ -648,6 +728,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    }
    }
 
+
    int nAK4Jets = 0;
    for (std::vector<pat::Jet>::const_iterator jetBegin = ak4Jets->begin(), jetEnd = ak4Jets->end(), ijet = jetBegin; ijet != jetEnd; ++ijet){
 
@@ -683,6 +764,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	}
 
 
+
 	genPt->push_back(treeVars["gen_pt"]);
 	dRjetParticle->push_back(treeVars["dR_gen_jet"]);
 	topSize->push_back(treeVars["gen_size"]);
@@ -692,28 +774,79 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	if (ijet->pt() < 200) continue;
 
 
-	auto const & thisSubjets = ijet->subjets();
+	auto const & thisSubjets = ijet->subjets("SoftDropPuppi");
+
 
 	if (thisSubjets.size() < 2) continue;
+
+
+	int isB = 0;
+	int isH = 0;
+	int isT = 0;
+	int isZ = 0;
+	int isW = 0;
+
+	if (isMC_){
+
+		TLorentzVector thisjetLV(ijet->px(), ijet->py(), ijet->pz(), ijet->energy());
+		for (size_t i = 0; i < savedGenParticles.size(); i++){
+
+			reco::GenParticle ipart = savedGenParticles[i];
+			TLorentzVector thisGenP(ipart.px(), ipart.py(), ipart.pz(), ipart.energy());
+			if (thisjetLV.DeltaR(thisGenP) < 0.4){
+				if (abs(ipart.pdgId()) == 5) isB = 1; 
+				if (abs(ipart.pdgId()) == 6) isT = 1; 
+				if (abs(ipart.pdgId()) == 23) isZ = 1; 
+				if (abs(ipart.pdgId()) == 24) isW = 1; 
+				if (abs(ipart.pdgId()) == 25) isH = 1; 
+			}
+		}
+
+
+	}
+
+
+
+	treeVars["isB"] = isB;	
+	treeVars["isT"] = isT;	
+	treeVars["isW"] = isW;	
+	treeVars["isZ"] = isZ;	
+	treeVars["isH"] = isH;	
+
+	isBv->push_back(isB);
+	isTv->push_back(isT);
+	isWv->push_back(isW);
+	isZv->push_back(isZ);
+	isHv->push_back(isH);
 
 
 	float btagValue1 = thisSubjets.at(0)->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
 	float btagValue2 = thisSubjets.at(1)->bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
 
 	
-	
+	TLorentzVector puppi_subjet0;
+	puppi_subjet0.SetPtEtaPhiM( thisSubjets.at(0)->pt(), thisSubjets.at(0)->eta(), thisSubjets.at(0)->phi(), thisSubjets.at(0)->mass() );	
+	TLorentzVector puppi_subjet1;
+	puppi_subjet1.SetPtEtaPhiM(thisSubjets.at(1)->pt(), thisSubjets.at(1)->eta(), thisSubjets.at(1)->phi(), thisSubjets.at(1)->mass() );	
+
+	float puppiSDmass = (puppi_subjet0+puppi_subjet1).M();
 
 
-	float tau3 = ijet->userFloat("NjettinessAK8:tau3");
-	float tau2 = ijet->userFloat("NjettinessAK8:tau2");
-	float tau1 = ijet->userFloat("NjettinessAK8:tau1");
+	float tau3 = ijet->userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau3");
+	float tau2 = ijet->userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau2");
+	float tau1 = ijet->userFloat("ak8PFJetsPuppiValueMap:NjettinessAK8PuppiTau1");
+	//float tau3 = ijet->userFloat("NjettinessAK8Puppi:tau3");
+	//float tau2 = ijet->userFloat("NjettinessAK8Puppi:tau2");
+	//float tau1 = ijet->userFloat("NjettinessAK8Puppi:tau1");
 	float tau32 = tau3/tau2;
 	float tau21 = tau2/tau1;
 
 
 	count++;
 
-
+	if (ijet->genJet() != NULL) {
+		genJetPt->push_back(ijet->genJet()->pt());
+	} else genJetPt->push_back(-999.9);
 	fourv thisJet = ijet->polarP4();
 
 	treeVars["bDisc"] = max( btagValue1, btagValue2 );
@@ -724,7 +857,8 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	treeVars["et"] = thisJet.Pt();
 	treeVars["eta"] = thisJet.Rapidity();
 	treeVars["mass"] = thisJet.M();
-	treeVars["SDmass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+	treeVars["SDmass"] = puppiSDmass;//ijet->userFloat("ak8PFJetsCHSSoftDropMass");
+	//treeVars["SDmass"] = ijet->userFloat("ak8PFJetsCHSSoftDropMass");
 
 	treeVars["tau32"] = tau32;
 	treeVars["tau21"] = tau21;
@@ -795,21 +929,23 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 	float qxptsum = 0.0;
 	float ptsum = pow(ijet->pt(), 0.6);
 		
-	vector<reco::Candidate * > daughtersOfJet;
+	vector<pat::PackedCandidate * > daughtersOfJet;
 
 
 	for (unsigned int i = 0; i < ijet->daughter(0)->numberOfDaughters(); i++){
 	
-		daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(0)->daughter(i) );
+		daughtersOfJet.push_back( (pat::PackedCandidate *) ijet->daughter(0)->daughter(i) );
+		//pat::PackedCandidate* thisCand = (pat::PackedCandidate *) ijet->daughter(0)->daughter(i);
+
 	}
 
 	for (unsigned int i = 0; i < ijet->daughter(1)->numberOfDaughters(); i++){
 
-		daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(1)->daughter(i));
+		daughtersOfJet.push_back( (pat::PackedCandidate *) ijet->daughter(1)->daughter(i));
 	}
 	for (unsigned int i = 2; i< ijet->numberOfDaughters(); i++){
 
-		daughtersOfJet.push_back( (reco::Candidate *) ijet->daughter(i) );
+		daughtersOfJet.push_back( (pat::PackedCandidate *) ijet->daughter(i) );
 	}
 	
 	for(unsigned int i = 0; i < daughtersOfJet.size(); i++){
@@ -819,8 +955,11 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 		TVector3 ijetVect( ijet->px(), ijet->py(), ijet->pz() );
 
+		float puppiWt = 1.0;
+		if (usePuppi_) puppiWt = daughtersOfJet[i]->puppiWeight();
 
-		if (daughtersOfJet[i]->pt() < 0.5) continue;
+
+		if (puppiWt*daughtersOfJet[i]->pt() < 0.5) continue;
 
 		TLorentzVector thisParticleLV_jet( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );		
 		TLorentzVector thisParticleLV_top( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );		
@@ -828,7 +967,15 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		TLorentzVector thisParticleLV_Z( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );		
 		TLorentzVector thisParticleLV_H( daughtersOfJet[i]->px(), daughtersOfJet[i]->py(), daughtersOfJet[i]->pz(), daughtersOfJet[i]->energy() );		
 
+		if (usePuppi_){
 
+
+			thisParticleLV_jet *= puppiWt;
+			thisParticleLV_top *= puppiWt;
+			thisParticleLV_W *= puppiWt;
+			thisParticleLV_Z *= puppiWt;
+			thisParticleLV_H *= puppiWt;
+		}
 		if (daughtersOfJet[i]->pt() > 1.0) qxptsum += daughtersOfJet[i]->charge() * pow( daughtersOfJet[i]->pt(), 0.6);//(ijetVect) ;
 		
 
@@ -906,6 +1053,8 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 	}
+
+	if (particles2_top.size() < 1) continue;
 
 
 	float jetq = qxptsum / ptsum;
@@ -1303,6 +1452,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 
 
+    if (passFilters) {
 
    iEvent.put( fw_moments_0, "FWmoment0");
    iEvent.put( fw_moments_1, "FWmoment1");
@@ -1357,6 +1507,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put( aplanarity_H, "aplanarityH");
    iEvent.put( thrust_H, "thrustH");
    iEvent.put( et, "et");
+   iEvent.put( genJetPt, "genJetPt");
    iEvent.put( eta, "eta");
    iEvent.put( mass, "mass");
    iEvent.put( SDmass, "SDmass");
@@ -1389,6 +1540,14 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.put( genPt, "genPt");
    iEvent.put( dRjetParticle, "dRjetParticle");
    iEvent.put( topSize, "topSize");
+   iEvent.put( muRFweights, "muRFweights");
+   iEvent.put( PDFweights, "PDFweights");
+   iEvent.put( isBv, "isB");
+   iEvent.put( isTv, "isT");
+   iEvent.put( isWv, "isW");
+   iEvent.put( isZv, "isZ");
+   iEvent.put( isHv, "isH");
+   }
 
 }
 // ------------ method called once each stream before processing any runs, lumis or events  ------------
@@ -1512,20 +1671,41 @@ void BESTProducer::pboost( TVector3 pbeam, TVector3 plab, TLorentzVector &pboo )
 
 
 // ------------ method called when starting to processes a run  ------------
-/*
+
 void
-BESTProducer::beginRun(edm::Run const&, edm::EventSetup const&)
+BESTProducer::beginRun(edm::Run const& iRun, edm::EventSetup const&)
 {
+
+  
+
+
+
+
 }
-*/
+
  
 // ------------ method called when ending the processing of a run  ------------
-/*
+
 void
-BESTProducer::endRun(edm::Run const&, edm::EventSetup const&)
+BESTProducer::endRun(edm::Run const& iRun, edm::EventSetup const&)
 {
+
+  /*edm::Handle<LHERunInfoProduct> run; 
+  typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
+  iRun.getByToken( lheToken_, run );
+  LHERunInfoProduct myLHERunInfoProduct = *(run.product());
+  
+  for (headers_const_iterator iter=myLHERunInfoProduct.headers_begin(); iter!=myLHERunInfoProduct.headers_end(); iter++){
+      std::cout << iter->tag() << std::endl;
+      //std::vector<std::string> lines = iter->lines();
+      //for (unsigned int iLine = 0; iLine<lines.size(); iLine++) {
+      //std::cout << lines.at(iLine);
+    //}
+  }
+  */
+
 }
-*/
+
  
 // ------------ method called when starting to processes a luminosity block  ------------
 /*
