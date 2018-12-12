@@ -4,7 +4,7 @@ process = cms.Process("run")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
@@ -15,8 +15,12 @@ process.source = cms.Source("PoolSource",
 	#'/store/mc/RunIISummer16MiniAODv2/TprimeTprime_M-1100_TuneCUETP8M1_13TeV-madgraph-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/F6B4BC79-91B8-E611-A224-3417EBE7002A.root'#'file:////uscmst1b_scratch/lpc1/3DayLifetime/pilot/1A405524-3E3D-E611-B103-047D7BD6DDB2.root'
 	#'/store/mc/RunIISummer16MiniAODv2/TT_TuneCUETP8M2T4_13TeV-powheg-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/50000/0693E0E7-97BE-E611-B32F-0CC47A78A3D8.root',
 	#'root://cmsxrootd-site.fnal.gov//store/mc/RunIISpring16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUSpring16RAWAODSIM_reHLT_80X_mcRun2_asymptotic_v14-v1/70000/1A405524-3E3D-E611-B103-047D7BD6DDB2.root'
-	'/store/mc/RunIISummer16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/D6D620EF-73BE-E611-8BFB-B499BAA67780.root'
-	)
+	#'/store/mc/RunIISummer16MiniAODv2/ZprimeToTT_M-3000_W-30_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/D6D620EF-73BE-E611-8BFB-B499BAA67780.root'
+	'/store/mc/RunIISummer16MiniAODv2/QCD_Pt-15to7000_TuneCUETP8M1_FlatP6_13TeV_pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/0C2141B5-62BE-E611-82EA-1866DAEA6D08.root',
+	'/store/mc/RunIISummer16MiniAODv2/QCD_Pt-15to7000_TuneCUETP8M1_FlatP6_13TeV_pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/ECA7EA96-61BE-E611-8FD9-842B2B61B189.root',
+	'/store/mc/RunIISummer16MiniAODv2/QCD_Pt-15to7000_TuneCUETP8M1_FlatP6_13TeV_pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/84FC31D8-64BE-E611-8FAA-D4AE526B7683.root',
+	'/store/mc/RunIISummer16MiniAODv2/QCD_Pt-15to7000_TuneCUETP8M1_FlatP6_13TeV_pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/3236FF61-67BE-E611-92FE-842B2B42D35D.root',
+	'/store/mc/RunIISummer16MiniAODv2/QCD_Pt-15to7000_TuneCUETP8M1_FlatP6_13TeV_pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/80000/2C6C48A6-68BE-E611-85B5-90B11C0BD63B.root')
 )
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
@@ -35,12 +39,12 @@ process.countAK8Jets = cms.EDFilter("PATCandViewCountFilter",
 
 process.run = cms.EDProducer('BESTProducer',
 	inputJetColl = cms.string('selectedAK8Jets'),
-	pdgIDforMatch = cms.int32(6),
+	pdgIDforMatch = cms.int32(2),
 	NNtargetX = cms.int32(1),
 	NNtargetY = cms.int32(1),
 	isMC = cms.int32(1),
 	doMatch = cms.int32(0),
-	usePuppi = cms.int32(1)
+	usePuppi = cms.int32(0)
 
 )
 process.TFileService = cms.Service("TFileService", fileName = cms.string("histo_BESTprod.root") )
