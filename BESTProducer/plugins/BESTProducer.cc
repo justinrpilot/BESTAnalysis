@@ -392,8 +392,8 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
    edm::InputTag lheTag_;
    edm::InputTag genInfoTag_;
    lheTag_ = edm::InputTag("externalLHEProducer", "", "LHE"); 
-   //edm::InputTag lheEventTag_;
-   //lheEventTag_ = edm::InputTag("externalLHEProducer", "", "LHE");
+   edm::InputTag lheEventTag_;
+   lheEventTag_ = edm::InputTag("externalLHEProducer", "", "LHE");
    ak8JetsTag_ = edm::InputTag(inputJetColl_, "", "run");
    genInfoTag_ = edm::InputTag("generator");
 
@@ -426,8 +426,8 @@ for (unsigned i = 0; i < listOfVars.size(); i++){
    ak8CHSSoftDropSubjetsToken_ = consumes<std::vector<pat::Jet> >( ak8subjetsTag_ );
    verticesToken_ = consumes<std::vector<reco::Vertex> >(verticesTag_);
    trigResultsToken_ = consumes<edm::TriggerResults>(trigResultsTag_);
-   //lheToken_ = consumes<LHERunInfoProduct, edm::InRun >(lheTag_); 
-   //lheEventToken_ = consumes<LHEEventProduct >(lheEventTag_); 
+   lheToken_ = consumes<LHERunInfoProduct, edm::InRun >(lheTag_); 
+   lheEventToken_ = consumes<LHEEventProduct >(lheEventTag_); 
    genInfoToken_ = consumes<GenEventInfoProduct > (genInfoTag_); 
     //BadChCandFilterToken_ = consumes<bool>(iConfig.getParameter<edm::InputTag>("BadChargedCandidateFilter"));
    //BadPFMuonFilterToken_ = consumes<bool>(iConfig.getParameter<edm::InputTag>("BadPFMuonFilter"));
@@ -582,13 +582,13 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
    Handle< edm::TriggerResults > trigResults;
    iEvent.getByToken(trigResultsToken_, trigResults);
 
-   //Handle< LHEEventProduct > lheEventResults;
-   //iEvent.getByToken(lheEventToken_, lheEventResults);
+   Handle< LHEEventProduct > lheEventResults;
+   iEvent.getByToken(lheEventToken_, lheEventResults);
 
    Handle< GenEventInfoProduct > genInfoResults;
    iEvent.getByToken(genInfoToken_, genInfoResults);
 
-/*
+
    float defGenWeight = lheEventResults->originalXWGTUP();
    muRFweights->push_back( lheEventResults->weights()[1].wgt / defGenWeight );
    muRFweights->push_back( lheEventResults->weights()[2].wgt / defGenWeight );
@@ -601,7 +601,7 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	PDFweights->push_back( lheEventResults->weights()[i].wgt / defGenWeight );
    }
-*/
+
    vertV->push_back(vertices->size() );
    treeVars["npv"] = vertices->size();
 
@@ -658,12 +658,12 @@ BESTProducer::produce(edm::Event& iEvent, const edm::EventSetup& iSetup)
 		
 
 
-			if (abs(da1->pdgId()) == 6 || abs(da2->pdgId()) == 6) {
+			if (abs(da1->pdgId()) == 5 || abs(da2->pdgId()) == 5) {
 
 				if (abs(da1->pdgId()) == 23 || abs(da2->pdgId()) == 23) decayMode = 1;
 				else decayMode = 3;
 			}
-			if (abs(da1->pdgId()) == 5 || abs(da2->pdgId()) == 5) decayMode = 2;
+			if (abs(da1->pdgId()) == 6 || abs(da2->pdgId()) == 6) decayMode = 2;
 
 			
    			decayModeV->push_back(decayMode);
@@ -1690,7 +1690,7 @@ void
 BESTProducer::endRun(edm::Run const& iRun, edm::EventSetup const&)
 {
 
-  /*edm::Handle<LHERunInfoProduct> run; 
+  edm::Handle<LHERunInfoProduct> run; 
   typedef std::vector<LHERunInfoProduct::Header>::const_iterator headers_const_iterator;
   iRun.getByToken( lheToken_, run );
   LHERunInfoProduct myLHERunInfoProduct = *(run.product());
@@ -1702,7 +1702,7 @@ BESTProducer::endRun(edm::Run const& iRun, edm::EventSetup const&)
       //std::cout << lines.at(iLine);
     //}
   }
-  */
+  
 
 }
 
