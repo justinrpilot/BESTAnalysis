@@ -86,6 +86,46 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    listOfVars.push_back("sumP_H");
    listOfVars.push_back("tau32");
    listOfVars.push_back("tau21");
+   listOfVars.push_back("et1_jet");
+   listOfVars.push_back("et2_jet");
+   listOfVars.push_back("et3_jet");
+   listOfVars.push_back("et4_jet");
+   listOfVars.push_back("m12_jet");
+   listOfVars.push_back("m13_jet");
+   listOfVars.push_back("m23_jet");
+   listOfVars.push_back("m1234_jet");
+   listOfVars.push_back("et1_W");
+   listOfVars.push_back("et2_W");
+   listOfVars.push_back("et3_W");
+   listOfVars.push_back("et4_W");
+   listOfVars.push_back("m12_W");
+   listOfVars.push_back("m13_W");
+   listOfVars.push_back("m23_W");
+   listOfVars.push_back("m1234_W");
+   listOfVars.push_back("et1_Z");
+   listOfVars.push_back("et2_Z");
+   listOfVars.push_back("et3_Z");
+   listOfVars.push_back("et4_Z");
+   listOfVars.push_back("m12_Z");
+   listOfVars.push_back("m13_Z");
+   listOfVars.push_back("m23_Z");
+   listOfVars.push_back("m1234_Z");
+   listOfVars.push_back("et1_top");
+   listOfVars.push_back("et2_top");
+   listOfVars.push_back("et3_top");
+   listOfVars.push_back("et4_top");
+   listOfVars.push_back("m12_top");
+   listOfVars.push_back("m13_top");
+   listOfVars.push_back("m23_top");
+   listOfVars.push_back("m1234_top");
+   listOfVars.push_back("et1_H");
+   listOfVars.push_back("et2_H");
+   listOfVars.push_back("et3_H");
+   listOfVars.push_back("et4_H");
+   listOfVars.push_back("m12_H");
+   listOfVars.push_back("m13_H");
+   listOfVars.push_back("m23_H");
+   listOfVars.push_back("m1234_H");
  
    for (unsigned i = 0; i < listOfVars.size(); i++){
 
@@ -179,34 +219,69 @@ void runTree(string inFile, string outFile, string histName, float targX, float 
    reader->AddVariable( "tau32", &treeVars["tau32"] );
    reader->AddVariable( "tau21", &treeVars["tau21"] );
    reader->AddVariable( "SDmass", &treeVars["SDmass"]);
+   reader->AddVariable( "et1_top", &treeVars["et1_top"]);
+   reader->AddVariable( "et2_top", &treeVars["et2_top"]);
+   reader->AddVariable( "et3_top", &treeVars["et3_top"]);
+   reader->AddVariable( "et4_top", &treeVars["et4_top"]);
+   reader->AddVariable( "et1_W", &treeVars["et1_W"]);
+   reader->AddVariable( "et2_W", &treeVars["et2_W"]);
+   reader->AddVariable( "et3_W", &treeVars["et3_W"]);
+   reader->AddVariable( "et4_W", &treeVars["et4_W"]);
+   reader->AddVariable( "et1_Z", &treeVars["et1_Z"]);
+   reader->AddVariable( "et2_Z", &treeVars["et2_Z"]);
+   reader->AddVariable( "et3_Z", &treeVars["et3_Z"]);
+   reader->AddVariable( "et4_Z", &treeVars["et4_Z"]);
+   reader->AddVariable( "et1_H", &treeVars["et1_H"]);
+   reader->AddVariable( "et2_H", &treeVars["et2_H"]);
+   reader->AddVariable( "et3_H", &treeVars["et3_H"]);
+   reader->AddVariable( "et4_H", &treeVars["et4_H"]);
+   reader->AddVariable( "m12_H", &treeVars["m12_H"]);
+   reader->AddVariable( "m23_H", &treeVars["m23_H"]);
+   reader->AddVariable( "m13_H", &treeVars["m13_H"]);
+   reader->AddVariable( "m1234_H", &treeVars["m1234_H"]);
+   reader->AddVariable( "m12_W", &treeVars["m12_W"]);
+   reader->AddVariable( "m23_W", &treeVars["m23_W"]);
+   reader->AddVariable( "m13_W", &treeVars["m13_W"]);
+   reader->AddVariable( "m1234_W", &treeVars["m1234_W"]);
+   reader->AddVariable( "m12_Z", &treeVars["m12_Z"]);
+   reader->AddVariable( "m23_Z", &treeVars["m23_Z"]);
+   reader->AddVariable( "m13_Z", &treeVars["m13_Z"]);
+   reader->AddVariable( "m1234_Z", &treeVars["m1234_Z"]);
+   reader->AddVariable( "m12_top", &treeVars["m12_top"]);
+   reader->AddVariable( "m23_top", &treeVars["m23_top"]);
+   reader->AddVariable( "m13_top", &treeVars["m13_top"]);
+   reader->AddVariable( "m1234_top", &treeVars["m1234_top"]);
+   reader->AddVariable( "bDisc", &treeVars["bDisc"]);
+   reader->AddVariable( "q", &treeVars["q"]);
 
-   reader->BookMVA( "fourD", "weights/TMVARegression_5d_MLP.weights.xml");
-   reader->BookMVA("top", "weights/TMVAClassification_MLPBFGS.weights.xml");
-   reader->BookMVA("W", "weights/TMVAClassification_W_MLPBFGS.weights.xml");
-   reader->BookMVA("Z", "weights/TMVAClassification_Z_MLPBFGS.weights.xml");
-   reader->BookMVA("H", "weights/TMVAClassification_H_MLPBFGS.weights.xml");
-   reader->BookMVA("j", "weights/TMVAClassification_j_MLPBFGS.weights.xml");
+
+   reader->BookMVA( "fourD", "weights/TMVARegression_MLP.weights.xml");
+   //reader->BookMVA("top", "weights/TMVAClassification_MLPBFGS.weights.xml");
+   //reader->BookMVA("W", "weights/TMVAClassification_W_MLPBFGS.weights.xml");
+   //reader->BookMVA("Z", "weights/TMVAClassification_Z_MLPBFGS.weights.xml");
+   //reader->BookMVA("H", "weights/TMVAClassification_H_MLPBFGS.weights.xml");
+   //reader->BookMVA("j", "weights/TMVAClassification_j_MLPBFGS.weights.xml");
 
    TFile *weightFile = new TFile(histName.c_str(), "READ");
    TH1F *weightH = (TH1F *) weightFile->Get("weightH");
 
 
-   int nEvents = origFiles->GetEntries("et > 500.0 && et < 3000.0 && SDmass > 20.0");
-   float desiredEvents = 400000.0;
+   int nEvents = origFiles->GetEntries("et > 500");
+   float desiredEvents = 50000.0;
    TRandom* random1 = new TRandom;
 for (int i = 0; i < origFiles->GetEntries(); i++){
 	
+	if  (i % 10000 == 0) cout << 100*(float(i) / float(nEntries)) << " Percent Complete." << endl;
 	double rand = random1->Rndm();
-	if (reduce && rand > (desiredEvents / float(nEvents))) continue;
+	if (rand > (desiredEvents / float(nEvents))) continue;
 		origFiles->GetEntry(i);
 		cout.precision(3);
-		if  (i % 100000 == 0) cout << 100*(float(i) / float(nEntries)) << " Percent Complete." << endl;
 
 
 	//if (treeVars["et"] < 600.0 || treeVars["et"] > 3000.0 || treeVars["SDmass"] < 50.0) continue;	
-	//if (treeVars["et"] < 500.0) continue;
+	if (treeVars["et"] < 500.0) continue;
 	if (abs(treeVars["eta"]) > 2.4) continue;
-	//if (treeVars["SDmass"] < 50.0) continue;
+	//if (treeVars["SDmass"] < 10.0) continue;
 
 	float NNout1 = 0;//(reader->EvaluateRegression( "top" ))[0];
 	float NNout2 = 0;//(reader->EvaluateRegression( "W" ))[0];
